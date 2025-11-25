@@ -19,14 +19,14 @@ export default function HeroSection() {
         {/* Main Title */}
         <h1 className="text-5xl md:text-7xl font-playfair text-white mb-4 text-center">
           <span className="font-playfair italic">Beautiful</span>{" "}
-          <span className="font-playfair">Landing Pages</span>
+          <span className="font-playfair">Landing Page</span>
           <br />
           <span className="font-playfair">in Seconds</span>
         </h1>
 
         {/* Subtitle */}
         <p className="text-white/60 text-lg mb-12 text-center max-w-2xl font-sans not-italic">
-          Create stunning landing pages in seconds
+          Create stunning landing page in seconds
         </p>
 
         {/* Input Box */}
@@ -37,11 +37,11 @@ export default function HeroSection() {
               onChange={(e) => setPrompt(e.target.value)}
               placeholder="Describe your landing page..."
               className="w-full bg-transparent text-white text-base placeholder:text-white/40 outline-none resize-none"
-              rows={1}
+              rows={3}
             />
           </div>
 
-          <div className="mt-8 flex items-center justify-between">
+          <div className="mt-1 flex items-center justify-between">
             <div className="flex items-center gap-3">
               <button className="p-1 hover:bg-white/10 rounded-lg transition-colors">
                 <svg
@@ -77,7 +77,7 @@ export default function HeroSection() {
 
             <button className="p-2 bg-black hover:bg-[#C68E52] text-white rounded-lg transition-colors">
               <svg
-                className="w-5 h-5"
+                className="w-4 h-4"
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
@@ -86,7 +86,7 @@ export default function HeroSection() {
                   strokeLinecap="round"
                   strokeLinejoin="round"
                   strokeWidth={2}
-                  d="M5 15l7-7 7 7"
+                  d="M12 19V5M5 12l7-7 7 7"
                 />
               </svg>
             </button>
