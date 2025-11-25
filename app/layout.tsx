@@ -58,7 +58,7 @@ export default function RootLayout({
 
           // Social buttons - 더 명확한 대비
           socialButtonsBlockButton:
-            "bg-white/15 border-white/40 !text-white hover:bg-white/25 transition-all",
+            "bg-white border-white !text-white hover:bg-white/25 transition-all",
           socialButtonsBlockButtonText: "!text-white font-medium",
           socialButtonsIconButton: "!text-white",
 
@@ -80,8 +80,8 @@ export default function RootLayout({
             "!text-[#D4A574] hover:!text-[#C68E52] font-semibold",
 
           // Divider
-          dividerLine: "bg-white/40",
-          dividerText: "!text-white/70 font-medium",
+          dividerLine: "bg-white",
+          dividerText: "!text-white font-medium",
 
           // Modal
           modalBackdrop: "backdrop-blur-md",
