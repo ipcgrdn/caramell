@@ -1,7 +1,11 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import ProjectNav from "./ProjectNav";
+import ProjectCode from "./ProjectCode";
+import ProjectScreen from "./ProjectScreen";
+import ProjectChat from "./ProjectChat";
 
 interface Project {
   id: string;
@@ -13,11 +17,12 @@ interface Project {
   updatedAt: Date;
 }
 
-{/* 아직까지 구현되지 않은 상태 나중에 전부 다 뜯어 고쳐야 함 */}
-
-export default function ProjectView({ project }: { project: Project }) {
+export default function ProjectWorkspace({ project }: { project: Project }) {
   const router = useRouter();
   const [currentStatus, setCurrentStatus] = useState(project.status);
+  const [currentView, setCurrentView] = useState<"code" | "preview">("preview");
+  const [viewportSize, setViewportSize] = useState<"desktop" | "tablet" | "mobile">("desktop");
+  const [isChatOpen, setIsChatOpen] = useState(true);
 
   // Poll for status updates if generating
   useEffect(() => {
@@ -62,9 +67,7 @@ export default function ProjectView({ project }: { project: Project }) {
               />
             </svg>
           </div>
-          <h1 className="text-2xl font-playfair text-white mb-4">
-            Generating
-          </h1>
+          <h1 className="text-2xl font-playfair text-white mb-4">Generating</h1>
         </div>
       </div>
     );
@@ -92,40 +95,37 @@ export default function ProjectView({ project }: { project: Project }) {
     );
   }
 
-  // Ready state - show preview
+  // Ready state - IDE layout
   return (
-    <div className="min-h-screen bg-black">
-      <div className="container mx-auto px-4 py-8">
-        <div className="mb-8 flex items-center justify-between">
-          <div>
-            <h1 className="text-2xl font-playfair text-white mb-2">
-              {project.name || "Untitled Project"}
-            </h1>
-            <p className="text-white/60 text-sm">{project.prompt}</p>
-          </div>
-          <div className="flex gap-4">
-            <button className="px-4 py-2 bg-white/10 hover:bg-white/20 text-white rounded-lg transition-colors">
-              Regenerate  
-            </button>
-            <button className="px-4 py-2 bg-[#D4A574] hover:bg-[#C68E52] text-white rounded-lg transition-colors">
-              Publish
-            </button>
-          </div>
-        </div>
+    <div className="h-screen flex flex-col bg-black">
+      {/* Nav */}
+      <ProjectNav
+        projectName={project.name}
+        currentView={currentView}
+        onViewChange={setCurrentView}
+        viewportSize={viewportSize}
+        onViewportChange={setViewportSize}
+        isChatOpen={isChatOpen}
+        onChatToggle={() => setIsChatOpen(!isChatOpen)}
+      />
 
-        {/* Preview */}
-        <div className="bg-white rounded-lg overflow-hidden shadow-2xl">
-          {project.generatedCode ? (
-            <div
-              dangerouslySetInnerHTML={{ __html: project.generatedCode }}
-              className="w-full min-h-screen"
-            />
+      {/* Main content */}
+      <div className="flex-1 flex overflow-hidden">
+        {/* Left: Code or Preview */}
+        <div className="flex-1 overflow-hidden">
+          {currentView === "code" ? (
+            <ProjectCode code={project.generatedCode} />
           ) : (
-            <div className="p-20 text-center text-gray-500">
-              No code generated yet
-            </div>
+            <ProjectScreen code={project.generatedCode} viewportSize={viewportSize} />
           )}
         </div>
+
+        {/* Right: Chat */}
+        {isChatOpen && (
+          <div className="w-100 shrink-0">
+            <ProjectChat />
+          </div>
+        )}
       </div>
     </div>
   );

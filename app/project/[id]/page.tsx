@@ -1,7 +1,7 @@
 import { auth } from "@clerk/nextjs/server";
 import { redirect } from "next/navigation";
 import { prisma } from "@/lib/db";
-import ProjectView from "@/components/project/ProjectView";
+import ProjectWorkspace from "@/components/project/ProjectWorkspace";
 
 export default async function ProjectPage({
   params,
@@ -47,5 +47,5 @@ export default async function ProjectPage({
     );
   }
 
-  return <ProjectView project={project} />;
+  return <ProjectWorkspace project={project} />;
 }
