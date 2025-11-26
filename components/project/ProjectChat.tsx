@@ -1,48 +1,123 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
+
+interface ProjectChatProps {
+  initialPrompt: string;
+  projectId: string;
+  onFilesUpdate?: () => void;
+}
 
 interface Message {
   role: "user" | "assistant";
   content: string;
 }
 
-export default function ProjectChat() {
+export default function ProjectChat({
+  initialPrompt,
+  projectId,
+  onFilesUpdate,
+}: ProjectChatProps) {
+  const [showFullPrompt, setShowFullPrompt] = useState(false);
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  // Auto-resize textarea
+  useEffect(() => {
+    if (textareaRef.current) {
+      textareaRef.current.style.height = "auto";
+      textareaRef.current.style.height = `${textareaRef.current.scrollHeight}px`;
+    }
+  }, [input]);
+
+  const handleSubmit = async (e?: React.FormEvent) => {
+    if (e) e.preventDefault();
     if (!input.trim() || isLoading) return;
 
-    const userMessage: Message = { role: "user", content: input };
+    const userMessage: Message = {
+      role: "user",
+      content: input,
+    };
     setMessages((prev) => [...prev, userMessage]);
+    const messageToSend = input;
     setInput("");
     setIsLoading(true);
 
-    // TODO: Implement AI chat API call
-    // For now, just add a placeholder response
-    setTimeout(() => {
+    // Call AI API to get response
+    try {
+      const response = await fetch(`/api/projects/${projectId}/chat`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ message: messageToSend }),
+      });
+
+      if (!response.ok) throw new Error("Failed to get response");
+
+      const data = await response.json();
       const assistantMessage: Message = {
         role: "assistant",
-        content: "Chat functionality coming soon...",
+        content: data.response,
       };
       setMessages((prev) => [...prev, assistantMessage]);
+
+      // If files were updated, refresh the parent
+      if (data.filesUpdated && onFilesUpdate) {
+        // Small delay to ensure DB is updated
+        setTimeout(() => {
+          onFilesUpdate();
+        }, 500);
+      }
+    } catch (error) {
+      console.error("Chat error:", error);
+      const errorMessage: Message = {
+        role: "assistant",
+        content: "Sorry, Please try again.",
+      };
+      setMessages((prev) => [...prev, errorMessage]);
+    } finally {
       setIsLoading(false);
-    }, 1000);
+    }
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+    if (e.key === "Enter" && !e.shiftKey) {
+      e.preventDefault();
+      handleSubmit();
+    }
+  };
+
+  const handleCopyMessage = (content: string) => {
+    navigator.clipboard.writeText(content);
   };
 
   return (
-    <div className="h-full flex flex-col bg-[#0A0A0A] border-l border-white/10 relative">
+    <div className="h-full flex flex-col relative">
       {/* Messages */}
-      <div className="flex-1 overflow-auto p-4 pb-32 space-y-4">
-        {messages.length === 0 ? (
-          <div className="flex items-center justify-center h-full">
-            <div className="text-center max-w-[200px]">
-              <div className="w-12 h-12 mx-auto mb-3 rounded-full bg-linear-to-br from-[#D4A574]/20 to-[#C68E52]/20 flex items-center justify-center">
+      <div className="flex-1 overflow-auto p-6 pb-32 space-y-4">
+        {/* Initial User Prompt */}
+        <div className="space-y-2">
+          <div className="bg-white/5 backdrop-blur-sm text-white rounded-2xl px-5 py-4 relative border border-white/10">
+            <div
+              className={`text-sm leading-relaxed ${
+                !showFullPrompt && initialPrompt.length > 200
+                  ? "line-clamp-3"
+                  : ""
+              }`}
+            >
+              {initialPrompt}
+            </div>
+            {initialPrompt.length > 200 && (
+              <button
+                onClick={() => setShowFullPrompt(!showFullPrompt)}
+                className="mt-2 text-xs text-white/60 hover:text-white flex items-center gap-1"
+              >
+                {showFullPrompt ? "Show Less" : "Show All"}
                 <svg
-                  className="w-6 h-6 text-[#D4A574]"
+                  className={`w-3 h-3 transition-transform ${
+                    showFullPrompt ? "rotate-180" : ""
+                  }`}
                   fill="none"
                   stroke="currentColor"
                   viewBox="0 0 24 24"
@@ -51,44 +126,108 @@ export default function ProjectChat() {
                     strokeLinecap="round"
                     strokeLinejoin="round"
                     strokeWidth={2}
-                    d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z"
+                    d="M19 9l-7 7-7-7"
                   />
                 </svg>
-              </div>
-              <p className="text-white/40 text-xs text-center leading-relaxed">
-                Ask AI to help improve your project
-              </p>
-            </div>
+              </button>
+            )}
           </div>
-        ) : (
-          messages.map((message, index) => (
-            <div
-              key={index}
-              className={`${
-                message.role === "user" ? "text-right" : "text-left"
-              }`}
+
+          {/* Copy Button */}
+          <div className="flex items-center justify-end">
+            <button
+              onClick={() => handleCopyMessage(initialPrompt)}
+              className="text-white/40 hover:text-white/60 p-1 transition-colors"
+              title="Copy message"
             >
-              <div
-                className={`inline-block max-w-[85%] px-3 py-2 rounded-xl text-xs ${
-                  message.role === "user"
-                    ? "bg-linear-to-br from-[#D4A574] to-[#C68E52] text-white"
-                    : "bg-white/5 text-white/90 backdrop-blur-sm"
-                }`}
+              <svg
+                className="w-3.5 h-3.5"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+                strokeWidth={2}
               >
-                {message.content}
-              </div>
-            </div>
-          ))
-        )}
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"
+                />
+              </svg>
+            </button>
+          </div>
+        </div>
+
+        {/* Conversation Messages */}
+        {messages.map((message, index) => (
+          <div key={index} className="space-y-2">
+            {message.role === "user" ? (
+              <>
+                <div className="flex justify-end">
+                  <div className="bg-white/10 backdrop-blur-sm text-white rounded-lg px-4 py-1 max-w-[85%] border border-white/10">
+                    <p className="text-sm leading-relaxed">{message.content}</p>
+                  </div>
+                </div>
+                {/* Copy Button */}
+                <div className="flex items-center justify-end">
+                  <button
+                    onClick={() => handleCopyMessage(message.content)}
+                    className="text-white/40 hover:text-white/60 p-1 transition-colors"
+                    title="Copy message"
+                  >
+                    <svg
+                      className="w-3.5 h-3.5"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                      strokeWidth={2}
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"
+                      />
+                    </svg>
+                  </button>
+                </div>
+              </>
+            ) : (
+              <>
+                <div className="backdrop-blur-sm text-white px-4 py-1">
+                  <p className="text-sm leading-relaxed whitespace-pre-wrap">
+                    {message.content}
+                  </p>
+                </div>
+                {/* Copy Button */}
+                <div className="flex items-center justify-end">
+                  <button
+                    onClick={() => handleCopyMessage(message.content)}
+                    className="text-white/40 hover:text-white/60 p-1 transition-colors"
+                    title="Copy message"
+                  >
+                    <svg
+                      className="w-3.5 h-3.5"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                      strokeWidth={2}
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"
+                      />
+                    </svg>
+                  </button>
+                </div>
+              </>
+            )}
+          </div>
+        ))}
+
+        {/* Loading State */}
         {isLoading && (
-          <div className="text-left">
-            <div className="inline-block px-3 py-2 rounded-xl text-xs bg-white/5 text-white/90 backdrop-blur-sm">
-              <div className="flex items-center gap-1.5">
-                <div className="w-1.5 h-1.5 bg-[#D4A574] rounded-full animate-pulse" />
-                <div className="w-1.5 h-1.5 bg-[#D4A574] rounded-full animate-pulse delay-100" />
-                <div className="w-1.5 h-1.5 bg-[#D4A574] rounded-full animate-pulse delay-200" />
-              </div>
-            </div>
+          <div className="flex items-center">
+            <div className="w-2 h-2 bg-[#D4A574] rounded-full animate-pulse" />
           </div>
         )}
       </div>
@@ -100,35 +239,74 @@ export default function ProjectChat() {
             {/* Gradient overlay */}
             <div className="absolute inset-0 bg-linear-to-br from-white/5 to-transparent pointer-events-none" />
 
-            <div className="relative flex items-center gap-2 p-3">
-              <input
-                type="text"
-                value={input}
-                onChange={(e) => setInput(e.target.value)}
-                placeholder="Ask AI anything..."
-                className="flex-1 bg-transparent border-0 outline-none text-xs text-white placeholder:text-white/30 px-2"
-                disabled={isLoading}
-              />
-              <button
-                type="submit"
-                disabled={isLoading || !input.trim()}
-                className="shrink-0 w-8 h-8 rounded-full bg-linear-to-br from-[#D4A574] to-[#C68E52] hover:from-[#C68E52] hover:to-[#B57D41] disabled:opacity-40 disabled:cursor-not-allowed text-white transition-all shadow-lg hover:shadow-xl hover:scale-105 flex items-center justify-center"
-                aria-label="Send message"
-              >
-                <svg
-                  className="w-4 h-4"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
+            {/* Two-layer structure */}
+            <div className="relative">
+              {/* Top Layer - Input */}
+              <div className="px-4 pt-3">
+                <textarea
+                  ref={textareaRef}
+                  value={input}
+                  onChange={(e) => setInput(e.target.value)}
+                  onKeyDown={handleKeyDown}
+                  placeholder="Ask for revisions..."
+                  className="w-full bg-transparent border-0 outline-none text-sm text-white placeholder:text-white/30 resize-none min-h-[32px] max-h-[200px]"
+                  disabled={isLoading}
+                  rows={1}
+                  style={{
+                    height: "auto",
+                    overflowY: input.split("\n").length > 3 ? "auto" : "hidden",
+                  }}
+                />
+              </div>
+
+              {/* Divider */}
+              <div className="h-px bg-white/10" />
+
+              {/* Bottom Layer - Actions */}
+              <div className="px-4 py-1.5 flex items-center justify-between">
+                {/* Plus Button */}
+                <button
+                  type="button"
+                  className="shrink-0 text-white/40 hover:text-white/60 transition-colors"
+                  title="Add attachment"
                 >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"
-                  />
-                </svg>
-              </button>
+                  <svg
+                    className="w-3.5 h-3.5"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                    strokeWidth={2.5}
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      d="M12 4v16m8-8H4"
+                    />
+                  </svg>
+                </button>
+
+                {/* Submit Button */}
+                <button
+                  type="submit"
+                  disabled={isLoading || !input.trim()}
+                  className="shrink-0 w-5 h-5 rounded-full bg-linear-to-br from-[#D4A574] to-[#C68E52] hover:from-[#C68E52] hover:to-[#B57D41] disabled:opacity-40 disabled:cursor-not-allowed text-black transition-all shadow-lg hover:shadow-xl hover:scale-105 flex items-center justify-center"
+                  aria-label="Send message"
+                >
+                  <svg
+                    className="w-3 h-3"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                    strokeWidth={2.5}
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      d="M5 10l7-7m0 0l7 7m-7-7v18"
+                    />
+                  </svg>
+                </button>
+              </div>
             </div>
           </div>
         </form>

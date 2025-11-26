@@ -36,7 +36,9 @@ model Project {
 
   prompt        String   @db.Text
   name          String?
-  generatedCode String?  @db.Text
+
+  // JSON file structure for Next.js projects
+  files         Json?
   status        String   @default("generating")
 
   createdAt     DateTime @default(now())

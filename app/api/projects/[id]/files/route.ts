@@ -2,7 +2,7 @@ import { auth } from "@clerk/nextjs/server";
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 
-export async function GET(
+export async function PATCH(
   req: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
@@ -22,32 +22,37 @@ export async function GET(
       return NextResponse.json({ error: "User not found" }, { status: 404 });
     }
 
+    // Get request body
+    const body = await req.json();
+    const { files } = body;
+
+    if (!files) {
+      return NextResponse.json({ error: "Files required" }, { status: 400 });
+    }
+
+    // Verify project ownership
     const project = await prisma.project.findUnique({
       where: {
         id,
         userId: user.id,
       },
-      select: {
-        status: true,
-        files: true,
-      },
     });
 
     if (!project) {
-      return NextResponse.json(
-        { error: "Project not found" },
-        { status: 404 }
-      );
+      return NextResponse.json({ error: "Project not found" }, { status: 404 });
     }
 
-    return NextResponse.json({
-      status: project.status,
-      hasCode: !!project.files,
+    // Update project files
+    await prisma.project.update({
+      where: { id },
+      data: { files },
     });
+
+    return NextResponse.json({ success: true });
   } catch (error) {
-    console.error("Error fetching project status:", error);
+    console.error("Error updating files:", error);
     return NextResponse.json(
-      { error: "Failed to fetch status" },
+      { error: "Internal server error" },
       { status: 500 }
     );
   }

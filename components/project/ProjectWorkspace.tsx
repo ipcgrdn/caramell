@@ -11,7 +11,7 @@ interface Project {
   id: string;
   prompt: string;
   name: string | null;
-  generatedCode: string | null;
+  files: Record<string, string> | null;
   status: string;
   createdAt: Date;
   updatedAt: Date;
@@ -21,7 +21,9 @@ export default function ProjectWorkspace({ project }: { project: Project }) {
   const router = useRouter();
   const [currentStatus, setCurrentStatus] = useState(project.status);
   const [currentView, setCurrentView] = useState<"code" | "preview">("preview");
-  const [viewportSize, setViewportSize] = useState<"desktop" | "tablet" | "mobile">("desktop");
+  const [viewportSize, setViewportSize] = useState<
+    "desktop" | "tablet" | "mobile"
+  >("desktop");
   const [isChatOpen, setIsChatOpen] = useState(true);
 
   // Poll for status updates if generating
@@ -114,16 +116,24 @@ export default function ProjectWorkspace({ project }: { project: Project }) {
         {/* Left: Code or Preview */}
         <div className="flex-1 overflow-hidden">
           {currentView === "code" ? (
-            <ProjectCode code={project.generatedCode} />
+            <ProjectCode
+              files={project.files}
+              projectId={project.id}
+              onFilesUpdate={() => router.refresh()}
+            />
           ) : (
-            <ProjectScreen code={project.generatedCode} viewportSize={viewportSize} />
+            <ProjectScreen files={project.files} viewportSize={viewportSize} />
           )}
         </div>
 
         {/* Right: Chat */}
         {isChatOpen && (
           <div className="w-100 shrink-0">
-            <ProjectChat />
+            <ProjectChat
+              initialPrompt={project.prompt}
+              projectId={project.id}
+              onFilesUpdate={() => router.refresh()}
+            />
           </div>
         )}
       </div>

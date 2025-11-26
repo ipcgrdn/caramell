@@ -2,7 +2,7 @@ import { auth } from "@clerk/nextjs/server";
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 
-import { generateLandingPage } from "@/lib/generators/aiGenerator";
+import { chatWithAI } from "@/lib/generators/aiGenerator";
 
 export async function POST(
   req: Request,
@@ -36,31 +36,39 @@ export async function POST(
       return NextResponse.json({ error: "Project not found" }, { status: 404 });
     }
 
-    // Generate code
+    // Get request body
+    const body = await req.json();
+    const { message } = body;
+
+    if (!message) {
+      return NextResponse.json({ error: "Message required" }, { status: 400 });
+    }
+
+    // Get current files
+    const currentFiles = (project.files as Record<string, string>) || {};
+
+    // Call AI to get response and potentially updated files
     try {
-      const files = await generateLandingPage(project.prompt);
+      const result = await chatWithAI(message, currentFiles);
 
-      // Update project with generated files
-      await prisma.project.update({
-        where: { id },
-        data: {
-          files,
-          status: "ready",
-          name: project.name || extractTitleFromPrompt(project.prompt),
-        },
+      // If AI returned updated files, save them
+      if (result.files) {
+        await prisma.project.update({
+          where: { id },
+          data: { files: result.files },
+        });
+      }
+
+      return NextResponse.json({
+        response: result.response,
+        filesUpdated: !!result.files,
       });
-
-      return NextResponse.json({ success: true });
     } catch (error) {
-      console.error("Generation error:", error);
-
-      // Mark as failed
-      await prisma.project.update({
-        where: { id },
-        data: { status: "failed" },
-      });
-
-      return NextResponse.json({ error: "Generation failed" }, { status: 500 });
+      console.error("Chat AI error:", error);
+      return NextResponse.json(
+        { error: "Failed to get AI response" },
+        { status: 500 }
+      );
     }
   } catch (error) {
     console.error("Error:", error);
@@ -69,10 +77,4 @@ export async function POST(
       { status: 500 }
     );
   }
-}
-
-// Extract a title from the prompt
-function extractTitleFromPrompt(prompt: string): string {
-  const words = prompt.split(" ").slice(0, 5);
-  return words.join(" ") + (prompt.split(" ").length > 5 ? "..." : "");
 }
