@@ -2,7 +2,8 @@ import { auth } from "@clerk/nextjs/server";
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 
-import { generateLandingPage } from "@/lib/generators/aiGenerator";
+import { generateLandingPage } from "@/lib/aiGenerator";
+import { regenerateProjectScreenshot } from "@/lib/screenshot";
 
 export async function POST(
   _req: Request,
@@ -40,13 +41,23 @@ export async function POST(
     try {
       const files = await generateLandingPage(project.prompt);
 
-      // Update project with generated files
+      // Generate screenshot from the generated files
+      let screenshotPath: string | null = null;
+      try {
+        screenshotPath = await regenerateProjectScreenshot(id, files);
+      } catch (screenshotError) {
+        console.error("Screenshot generation failed:", screenshotError);
+        // Continue without screenshot
+      }
+
+      // Update project with generated files and screenshot
       await prisma.project.update({
         where: { id },
         data: {
           files,
           status: "ready",
           name: project.name || extractTitleFromPrompt(project.prompt),
+          screenshot: screenshotPath,
         },
       });
 

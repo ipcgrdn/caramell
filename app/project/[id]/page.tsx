@@ -1,6 +1,7 @@
 import { auth } from "@clerk/nextjs/server";
 import { redirect } from "next/navigation";
 import { prisma } from "@/lib/db";
+
 import ProjectWorkspace from "@/components/project/ProjectWorkspace";
 
 export default async function ProjectPage({

@@ -1,7 +1,7 @@
 import { Webhook } from "svix";
 import { headers } from "next/headers";
 import { WebhookEvent } from "@clerk/nextjs/server";
-import { db } from "@/lib/db";
+import { prisma } from "@/lib/db";
 
 export async function POST(req: Request) {
   const WEBHOOK_SECRET = process.env.CLERK_WEBHOOK_SECRET;
@@ -53,7 +53,7 @@ export async function POST(req: Request) {
     }
 
     try {
-      await db.user.create({
+      await prisma.user.create({
         data: {
           clerkId: id,
           email: email_addresses[0].email_address,
@@ -80,7 +80,7 @@ export async function POST(req: Request) {
     }
 
     try {
-      await db.user.update({
+      await prisma.user.update({
         where: {
           clerkId: id,
         },
@@ -109,7 +109,7 @@ export async function POST(req: Request) {
     }
 
     try {
-      await db.user.delete({
+      await prisma.user.delete({
         where: {
           clerkId: id,
         },

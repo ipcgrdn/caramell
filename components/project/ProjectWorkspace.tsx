@@ -25,6 +25,8 @@ export default function ProjectWorkspace({ project }: { project: Project }) {
     "desktop" | "tablet" | "mobile"
   >("desktop");
   const [isChatOpen, setIsChatOpen] = useState(true);
+  const [chatWidth, setChatWidth] = useState(400);
+  const [isResizing, setIsResizing] = useState(false);
 
   // Poll for status updates if generating
   useEffect(() => {
@@ -42,6 +44,27 @@ export default function ProjectWorkspace({ project }: { project: Project }) {
       return () => clearInterval(interval);
     }
   }, [currentStatus, project.id, router]);
+
+  // Handle chat resize
+  const handleResizeStart = () => {
+    setIsResizing(true);
+
+    const handleMouseMove = (e: MouseEvent) => {
+      const newWidth = window.innerWidth - e.clientX;
+      if (newWidth >= 300 && newWidth <= 800) {
+        setChatWidth(newWidth);
+      }
+    };
+
+    const handleMouseUp = () => {
+      setIsResizing(false);
+      document.removeEventListener("mousemove", handleMouseMove);
+      document.removeEventListener("mouseup", handleMouseUp);
+    };
+
+    document.addEventListener("mousemove", handleMouseMove);
+    document.addEventListener("mouseup", handleMouseUp);
+  };
 
   // Generating state
   if (currentStatus === "generating") {
@@ -114,7 +137,10 @@ export default function ProjectWorkspace({ project }: { project: Project }) {
       {/* Main content */}
       <div className="flex-1 flex overflow-hidden">
         {/* Left: Code or Preview */}
-        <div className="flex-1 overflow-hidden">
+        <div
+          className="flex-1 overflow-hidden"
+          style={{ pointerEvents: isResizing ? "none" : "auto" }}
+        >
           {currentView === "code" ? (
             <ProjectCode
               files={project.files}
@@ -128,12 +154,26 @@ export default function ProjectWorkspace({ project }: { project: Project }) {
 
         {/* Right: Chat */}
         {isChatOpen && (
-          <div className="w-100 shrink-0">
-            <ProjectChat
-              initialPrompt={project.prompt}
-              projectId={project.id}
-              onFilesUpdate={() => router.refresh()}
-            />
+          <div
+            className="shrink-0 relative flex"
+            style={{ width: `${chatWidth}px` }}
+          >
+            {/* Resizer */}
+            <div
+              className="w-px bg-none cursor-col-resize transition-all relative group"
+              onMouseDown={handleResizeStart}
+            >
+              <div className="absolute inset-y-0 -left-1 -right-1" />
+            </div>
+
+            {/* Chat content */}
+            <div className="flex-1 overflow-hidden">
+              <ProjectChat
+                initialPrompt={project.prompt}
+                projectId={project.id}
+                onFilesUpdate={() => router.refresh()}
+              />
+            </div>
           </div>
         )}
       </div>

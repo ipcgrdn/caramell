@@ -2,6 +2,8 @@ import { auth } from "@clerk/nextjs/server";
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 
+import { regenerateProjectScreenshot } from "@/lib/screenshot";
+
 export async function PATCH(
   req: Request,
   { params }: { params: Promise<{ id: string }> }
@@ -42,10 +44,22 @@ export async function PATCH(
       return NextResponse.json({ error: "Project not found" }, { status: 404 });
     }
 
-    // Update project files
+    // Regenerate screenshot since files were manually edited
+    let screenshotPath: string | null = null;
+    try {
+      screenshotPath = await regenerateProjectScreenshot(id, files);
+    } catch (screenshotError) {
+      console.error("Screenshot regeneration failed:", screenshotError);
+      // Continue without screenshot update
+    }
+
+    // Update project files and screenshot
     await prisma.project.update({
       where: { id },
-      data: { files },
+      data: {
+        files,
+        screenshot: screenshotPath || project.screenshot, // Keep old screenshot if regeneration fails
+      },
     });
 
     return NextResponse.json({ success: true });

@@ -1,9 +1,10 @@
 import { MeshGradient } from "@paper-design/shaders-react";
 import PromptInput from "@/components/main/PromptInput";
+import RecentSection from "@/components/sections/recentSection";
 
 export default function HeroSection() {
   return (
-    <div className="w-full min-h-screen relative overflow-hidden pt-32">
+    <div className="w-full min-h-screen relative overflow-hidden pt-32 pb-20">
       <MeshGradient
         className="w-full h-full absolute inset-0"
         colors={["#000000", "#1a1a1a", "#333333", "#D4A574", "#C68E52"]}
@@ -11,7 +12,7 @@ export default function HeroSection() {
       />
 
       {/* Content */}
-      <div className="relative z-10 h-full flex flex-col items-center justify-center px-8 py-20">
+      <div className="relative z-10 h-full flex flex-col items-center justify-center px-8 py-20 mb-20">
         {/* Main Title */}
         <h1 className="text-5xl md:text-7xl font-playfair text-white mb-4 text-center">
           <span className="font-playfair italic">Beautiful</span>{" "}
@@ -28,6 +29,9 @@ export default function HeroSection() {
         {/* Prompt Input */}
         <PromptInput />
       </div>
+
+      {/* Recent Projects Section - Inside Hero */}
+      <RecentSection />
     </div>
   );
 }
