@@ -18,19 +18,12 @@ export async function GET(req: Request) {
       12
     );
 
-    // Find user in database
-    const user = await prisma.user.findUnique({
-      where: { clerkId: userId },
-    });
-
-    if (!user) {
-      return NextResponse.json({ projects: [] });
-    }
-
-    // Get recent projects
+    // Get recent projects with user lookup in single query
     const projects = await prisma.project.findMany({
       where: {
-        userId: user.id,
+        user: {
+          clerkId: userId,
+        },
       },
       orderBy: {
         createdAt: "desc",

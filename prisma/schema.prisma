@@ -50,6 +50,7 @@ model Project {
 
   @@index([userId])
   @@index([status])
+  @@index([userId, createdAt(sort: Desc)])
 }
 
 model ChatMessage {

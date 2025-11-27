@@ -1,6 +1,6 @@
 import { MeshGradient } from "@paper-design/shaders-react";
 import PromptInput from "@/components/main/PromptInput";
-import RecentSection from "@/components/sections/recentSection";
+import RecentProject from "@/components/main/recentProject";
 
 export default function HeroSection() {
   return (
@@ -31,7 +31,7 @@ export default function HeroSection() {
       </div>
 
       {/* Recent Projects Section - Inside Hero */}
-      <RecentSection />
+      <RecentProject />
     </div>
   );
 }

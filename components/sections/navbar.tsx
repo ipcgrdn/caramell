@@ -2,10 +2,28 @@
 
 import Link from "next/link";
 import { SignedIn, SignedOut, UserButton } from "@clerk/nextjs";
+import { useEffect, useState } from "react";
 
 export default function Navbar() {
+  const [isScrolled, setIsScrolled] = useState(false);
+
+  useEffect(() => {
+    const handleScroll = () => {
+      setIsScrolled(window.scrollY > 20);
+    };
+
+    window.addEventListener("scroll", handleScroll);
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
+
   return (
-    <nav className="fixed top-0 left-0 right-0 z-50 px-12 py-8">
+    <nav
+      className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
+        isScrolled
+          ? "px-8 py-4 mx-auto max-w-4xl mt-4 rounded-4xl bg-[#1a1a1a] backdrop-blur-xl"
+          : "px-12 py-8"
+      }`}
+    >
       <div className="max-w-8xl mx-auto grid grid-cols-3 items-center">
         {/* Left - Logo */}
         <div className="flex items-center justify-start">

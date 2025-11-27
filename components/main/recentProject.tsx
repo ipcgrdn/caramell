@@ -15,7 +15,7 @@ interface Project {
   screenshot: string | null;
 }
 
-export default function RecentSection() {
+export default function RecentProject() {
   const { userId, isLoaded } = useAuth();
   const [projects, setProjects] = useState<Project[]>([]);
 
