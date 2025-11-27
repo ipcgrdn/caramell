@@ -9,8 +9,11 @@ interface ProjectChatProps {
 }
 
 interface Message {
+  id?: string;
   role: "user" | "assistant";
   content: string;
+  filesChanged?: string[];
+  createdAt?: string;
 }
 
 export default function ProjectChat({
@@ -23,6 +26,23 @@ export default function ProjectChat({
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+
+  // Load chat history on mount
+  useEffect(() => {
+    const loadChatHistory = async () => {
+      try {
+        const response = await fetch(`/api/projects/${projectId}/chat`);
+        if (response.ok) {
+          const data = await response.json();
+          setMessages(data.messages || []);
+        }
+      } catch (error) {
+        console.error("Failed to load chat history:", error);
+      }
+    };
+
+    loadChatHistory();
+  }, [projectId]);
 
   // Auto-resize textarea
   useEffect(() => {
@@ -94,8 +114,11 @@ export default function ProjectChat({
 
   return (
     <div className="h-full flex flex-col relative">
+      {/* Liquid Glass Container */}
+      <div className="absolute inset-0 backdrop-blur-xl bg-linear-to-br from-white/8 via-white/5 to-white/2 rounded-3xl border border-white/10 shadow-[0_8px_32px_rgba(0,0,0,0.3),inset_0_1px_0_rgba(255,255,255,0.1)] pointer-events-none" />
+
       {/* Messages */}
-      <div className="flex-1 overflow-auto p-6 pb-32 space-y-4">
+      <div className="flex-1 overflow-auto p-6 pb-32 space-y-4 relative z-10">
         {/* Initial User Prompt */}
         <div className="space-y-2">
           <div className="bg-white/5 backdrop-blur-sm text-white rounded-2xl px-5 py-4 relative border border-white/10">
@@ -233,11 +256,15 @@ export default function ProjectChat({
       </div>
 
       {/* Floating Input */}
-      <div className="absolute bottom-0 left-0 right-0 p-4">
-        <form onSubmit={handleSubmit} className="relative">
-          <div className="relative backdrop-blur-xl bg-white/5 border border-white/10 rounded-2xl shadow-2xl overflow-hidden">
-            {/* Gradient overlay */}
-            <div className="absolute inset-0 bg-linear-to-br from-white/5 to-transparent pointer-events-none" />
+      <div className="absolute bottom-0 left-0 right-0 p-4 z-20">
+        {/* Dark Gradient Backdrop */}
+        <div className="absolute inset-0 bg-linear-to-t from-black/60 via-black/30 to-transparent pointer-events-none" />
+
+        <form onSubmit={handleSubmit} className="relative z-10">
+          <div className="relative backdrop-blur-2xl bg-white/10 border border-white/20 rounded-lg shadow-[0_8px_32px_rgba(0,0,0,0.4),inset_0_1px_0_rgba(255,255,255,0.2),0_0_80px_rgba(255,255,255,0.03)] overflow-hidden">
+            {/* Liquid Glass Gradient overlay */}
+            <div className="absolute inset-0 bg-linear-to-br from-white/10 via-transparent to-white/5 pointer-events-none" />
+            <div className="absolute inset-0 bg-linear-to-tl from-white/5 to-transparent pointer-events-none" />
 
             {/* Two-layer structure */}
             <div className="relative">

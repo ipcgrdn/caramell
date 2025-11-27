@@ -47,5 +47,12 @@ export default async function ProjectPage({
     );
   }
 
-  return <ProjectWorkspace project={project} />;
+  return (
+    <ProjectWorkspace
+      project={{
+        ...project,
+        files: project.files as Record<string, string> | null,
+      }}
+    />
+  );
 }

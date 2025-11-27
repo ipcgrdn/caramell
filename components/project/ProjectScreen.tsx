@@ -26,10 +26,10 @@ export default function ProjectScreen({
     }
 
     // Transform files to browser-executable code
-    const transformedCode = transformFilesToBrowserCode(files);
+    const { code, mainComponent } = transformFilesToBrowserCode(files);
 
     // Build complete HTML with React runtime
-    return buildPreviewHTML(transformedCode);
+    return buildPreviewHTML(code, mainComponent);
   }, [files]);
 
   if (!previewHTML) {
@@ -65,8 +65,12 @@ export default function ProjectScreen({
 }
 
 // Transform React files to browser-executable code
-function transformFilesToBrowserCode(files: Record<string, string>): string {
+function transformFilesToBrowserCode(files: Record<string, string>): {
+  code: string;
+  mainComponent: string;
+} {
   let code = "";
+  let mainComponent = "Page";
 
   // Sort files to ensure components are defined before page
   const sortedFiles = Object.entries(files).sort(([pathA], [pathB]) => {
@@ -91,6 +95,16 @@ function transformFilesToBrowserCode(files: Record<string, string>): string {
     // Remove import statements (we'll use CDN for React)
     transformed = transformed.replace(/^import .+$/gm, "");
 
+    // Extract function name from app/page.tsx for main component
+    if (filePath === "app/page.tsx") {
+      const functionMatch =
+        transformed.match(/export\s+default\s+function\s+(\w+)/) ||
+        transformed.match(/function\s+(\w+)\s*\(/);
+      if (functionMatch && functionMatch[1]) {
+        mainComponent = functionMatch[1];
+      }
+    }
+
     // Remove export default, just keep the function
     transformed = transformed.replace(/export default /g, "");
 
@@ -100,11 +114,11 @@ function transformFilesToBrowserCode(files: Record<string, string>): string {
     code += `\n${transformed}\n`;
   }
 
-  return code;
+  return { code, mainComponent };
 }
 
 // Build complete HTML with React runtime
-function buildPreviewHTML(code: string): string {
+function buildPreviewHTML(code: string, mainComponent: string): string {
   return `<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -137,17 +151,20 @@ function buildPreviewHTML(code: string): string {
 
     ${code}
 
-    // Render the Page component
+    // Render the main component
     const root = ReactDOM.createRoot(document.getElementById('root'));
 
-    // Try to render Page component if it exists
+    // Try to render main component
     try {
-      if (typeof Page !== 'undefined') {
-        root.render(<Page />);
+      if (typeof ${mainComponent} !== 'undefined') {
+        root.render(<${mainComponent} />);
       } else {
         root.render(
           <div style={{ padding: '2rem', textAlign: 'center' }}>
-            <p>Page component not found</p>
+            <p>${mainComponent} component not found</p>
+            <p style={{ fontSize: '0.875rem', color: '#666', marginTop: '0.5rem' }}>
+              Available components: {Object.keys(window).filter(k => k[0] === k[0].toUpperCase()).join(', ')}
+            </p>
           </div>
         );
       }

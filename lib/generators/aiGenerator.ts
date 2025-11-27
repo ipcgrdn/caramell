@@ -117,51 +117,78 @@ export async function generateLandingPage(prompt: string): Promise<FileSystem> {
 // Chat function to modify existing code
 export async function chatWithAI(
   userMessage: string,
-  currentFiles: FileSystem
-): Promise<{ response: string; files?: FileSystem }> {
-  const systemPrompt = `You are an expert Next.js and React developer. The user has an existing Next.js project and wants to modify it.
+  currentFiles: FileSystem,
+  chatHistory?: Array<{ role: string; content: string }>
+): Promise<{ response: string; fileChanges?: FileSystem }> {
+  const systemPrompt = `You are an expert Next.js and React developer helping users modify their existing Next.js project.
 
 CURRENT PROJECT FILES:
 ${JSON.stringify(currentFiles, null, 2)}
 
-USER REQUEST:
-${userMessage}
-
 YOUR TASK:
-1. Understand the user's request
-2. If the request requires code changes, return a JSON response with:
-   {
-     "response": "Brief explanation of what you'll do",
-     "files": { ...updated files... }
-   }
-3. If the request is just a question or doesn't require code changes, return:
+Analyze the user's request and respond appropriately:
+
+1. If NO code changes are needed (just a question/explanation):
    {
      "response": "Your helpful answer"
    }
 
-RULES FOR CODE CHANGES:
-- Return ONLY valid JSON
-- Maintain the same structure as the current files
-- Use 'use client' directive
-- Use TypeScript and Tailwind CSS
-- NO server components, NO async functions
-- Keep existing components that aren't being modified
+2. If code changes ARE needed:
+   {
+     "response": "Brief explanation of changes you're making",
+     "fileChanges": {
+       "path/to/file.tsx": "COMPLETE file content with changes"
+     }
+   }
 
-Return ONLY the JSON response.`;
+CRITICAL RULES FOR CODE CHANGES:
+- In "fileChanges", include ONLY the files you're actually modifying/creating
+- DO NOT include files that don't need changes - they will be kept automatically
+- Each file in "fileChanges" must contain the COMPLETE file content (not just the changed parts)
+- If adding a new file, include it in "fileChanges" with its full path
+- If modifying existing file, include the COMPLETE updated file content
+- NEVER delete files unless explicitly asked - omitted files are preserved
+
+TECHNICAL REQUIREMENTS:
+- Use 'use client' directive for all components
+- Use TypeScript (.tsx files)
+- Use Tailwind CSS for styling
+- NO server components, NO async functions
+- Modern, clean code following best practices
+
+Return ONLY valid JSON, no markdown, no code blocks.`;
 
   try {
+    // Build messages array with chat history
+    const messages: Array<{
+      role: "system" | "user" | "assistant";
+      content: string;
+    }> = [
+      {
+        role: "system",
+        content: systemPrompt,
+      },
+    ];
+
+    // Add chat history if provided (for context)
+    if (chatHistory && chatHistory.length > 0) {
+      for (const msg of chatHistory) {
+        messages.push({
+          role: msg.role as "user" | "assistant",
+          content: msg.content,
+        });
+      }
+    }
+
+    // Add current user message
+    messages.push({
+      role: "user",
+      content: userMessage,
+    });
+
     const stream = await openrouter.chat.send({
       model: "x-ai/grok-4.1-fast:free",
-      messages: [
-        {
-          role: "system",
-          content: systemPrompt,
-        },
-        {
-          role: "user",
-          content: userMessage,
-        },
-      ],
+      messages,
       stream: true,
       streamOptions: {
         includeUsage: true,

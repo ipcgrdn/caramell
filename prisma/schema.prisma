@@ -44,6 +44,25 @@ model Project {
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
 
+  chatMessages  ChatMessage[]
+
   @@index([userId])
   @@index([status])
+}
+
+model ChatMessage {
+  id            String   @id @default(cuid())
+  projectId     String
+  project       Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  role          String   // "user" or "assistant"
+  content       String   @db.Text
+
+  // Track which files were changed in this interaction (for assistant messages)
+  filesChanged  Json?
+
+  createdAt     DateTime @default(now())
+
+  @@index([projectId])
+  @@index([createdAt])
 }

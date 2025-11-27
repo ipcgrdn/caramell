@@ -5,7 +5,7 @@ import { prisma } from "@/lib/db";
 import { generateLandingPage } from "@/lib/generators/aiGenerator";
 
 export async function POST(
-  req: Request,
+  _req: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
