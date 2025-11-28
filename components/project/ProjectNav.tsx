@@ -272,7 +272,7 @@ export default function ProjectNav({
             onClick={onChatToggle}
             className={`p-2 rounded-lg transition-all ${
               isChatOpen
-                ? "bg-white/10 text-white"
+                ? "text-white"
                 : "text-white/60 hover:text-white hover:bg-white/5"
             }`}
             aria-label={isChatOpen ? "Close sidebar" : "Open sidebar"}

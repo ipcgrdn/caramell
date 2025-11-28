@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useUser } from "@clerk/nextjs";
 
@@ -9,6 +9,15 @@ export default function PromptInput() {
   const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
   const { isSignedIn } = useUser();
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
+
+  // Auto-resize textarea
+  useEffect(() => {
+    if (textareaRef.current) {
+      textareaRef.current.style.height = "auto";
+      textareaRef.current.style.height = `${textareaRef.current.scrollHeight}px`;
+    }
+  }, [prompt]);
 
   const handleSubmit = async () => {
     if (!prompt.trim()) return;
@@ -53,19 +62,24 @@ export default function PromptInput() {
     <div className="w-full max-w-2xl bg-white/5 backdrop-blur-md rounded-2xl border border-white/10 p-4 shadow-2xl">
       <div className="relative">
         <textarea
+          ref={textareaRef}
           value={prompt}
           onChange={(e) => setPrompt(e.target.value)}
           onKeyDown={handleKeyDown}
           placeholder="Describe your landing page..."
-          className="w-full bg-transparent text-white text-sm placeholder:text-white/40 outline-none resize-none"
-          rows={3}
+          className="w-full bg-transparent text-white text-sm placeholder:text-white/40 outline-none resize-none min-h-[60px] max-h-[200px]"
+          rows={1}
           disabled={isLoading}
+          style={{
+            height: "auto",
+            overflowY: prompt.split("\n").length > 3 ? "auto" : "hidden",
+          }}
         />
       </div>
 
       <div className="mt-1 flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <button className="p-1 hover:bg-white/10 rounded-lg transition-colors">
+          <button className="p-1 hover:bg-white/10 rounded-full transition-colors">
             <svg
               className="w-5 h-5 text-white/60"
               fill="none"
@@ -80,7 +94,7 @@ export default function PromptInput() {
               />
             </svg>
           </button>
-          <button className="p-1 hover:bg-white/10 rounded-lg transition-colors">
+          <button className="p-1 hover:bg-white/10 rounded-full transition-colors">
             <svg
               className="w-5 h-5 text-white/60"
               fill="none"
@@ -100,7 +114,7 @@ export default function PromptInput() {
         <button
           onClick={handleSubmit}
           disabled={isLoading || !prompt.trim()}
-          className="p-2 bg-black hover:bg-[#C68E52] text-white rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+          className="p-2 bg-black hover:bg-[#C68E52] text-white rounded-full transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
         >
           {isLoading ? (
             <svg

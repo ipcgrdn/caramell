@@ -115,7 +115,7 @@ export default function ProjectChat({
   return (
     <div className="h-full flex flex-col relative">
       {/* Liquid Glass Container */}
-      <div className="absolute inset-0 backdrop-blur-xl bg-linear-to-br from-white/8 via-white/5 to-white/2 rounded-3xl border border-white/10 shadow-[0_8px_32px_rgba(0,0,0,0.3),inset_0_1px_0_rgba(255,255,255,0.1)] pointer-events-none" />
+      <div className="absolute inset-0 backdrop-blur-xl bg-linear-to-br from-white/8 via-white/5 to-white/2 rounded-3xl border border-white/10 pointer-events-none" />
 
       {/* Messages */}
       <div className="flex-1 overflow-auto p-6 pb-32 space-y-4 relative z-10">
@@ -261,11 +261,7 @@ export default function ProjectChat({
         <div className="absolute inset-0 bg-linear-to-t from-black/60 via-black/30 to-transparent pointer-events-none" />
 
         <form onSubmit={handleSubmit} className="relative z-10">
-          <div className="relative backdrop-blur-2xl bg-white/10 border border-white/20 rounded-lg shadow-[0_8px_32px_rgba(0,0,0,0.4),inset_0_1px_0_rgba(255,255,255,0.2),0_0_80px_rgba(255,255,255,0.03)] overflow-hidden">
-            {/* Liquid Glass Gradient overlay */}
-            <div className="absolute inset-0 bg-linear-to-br from-white/10 via-transparent to-white/5 pointer-events-none" />
-            <div className="absolute inset-0 bg-linear-to-tl from-white/5 to-transparent pointer-events-none" />
-
+          <div className="relative bg-white/10 border border-white/20 rounded-lg overflow-hidden">
             {/* Two-layer structure */}
             <div className="relative">
               {/* Top Layer - Input */}
@@ -285,9 +281,6 @@ export default function ProjectChat({
                   }}
                 />
               </div>
-
-              {/* Divider */}
-              <div className="h-px bg-white/10" />
 
               {/* Bottom Layer - Actions */}
               <div className="px-4 py-1.5 flex items-center justify-between">
