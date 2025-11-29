@@ -28,7 +28,7 @@ export default function RecentProject() {
   const fetchProjects = async () => {
     try {
       // Fetch 6 recent projects by default
-      const response = await fetch("/api/projects/recent?limit=6");
+      const response = await fetch("/api/projects/recent?limit=8");
       if (response.ok) {
         const data = await response.json();
         setProjects(data.projects || []);

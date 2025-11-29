@@ -14,7 +14,7 @@ export async function GET(req: Request) {
     const { searchParams } = new URL(req.url);
     const limitParam = searchParams.get("limit");
     const limit = Math.min(
-      Math.max(parseInt(limitParam || "6", 10), 1),
+      Math.max(parseInt(limitParam || "8", 10), 1),
       12
     );
 

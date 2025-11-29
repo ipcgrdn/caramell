@@ -3,7 +3,7 @@
 import { useState, useRef, useEffect } from "react";
 import { MorphingSquare } from "../ui/morphing-square";
 import { AIModel, AI_MODELS } from "@/lib/aiTypes";
-import { ModelIcons } from "@/components/main/PromptInput";
+import { ModelIcons } from "@/lib/aiIcon";
 import {
   DropdownMenu,
   DropdownMenuContent,

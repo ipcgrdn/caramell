@@ -24,7 +24,7 @@ export async function* generateWithOpenAI(
 ): AsyncGenerator<string, GenerationResult, unknown> {
   try {
     const stream = await openai.chat.completions.create({
-      model: "gpt-5.1-mini",
+      model: "gpt-5-mini",
       messages: [
         {
           role: "system",
@@ -35,7 +35,7 @@ export async function* generateWithOpenAI(
           content: prompt,
         },
       ],
-      max_tokens: 16000,
+      max_completion_tokens: 16000,
       stream: true,
     });
 
@@ -141,9 +141,9 @@ Remember: Return ONLY valid JSON. No markdown blocks.`,
     });
 
     const response = await openai.chat.completions.create({
-      model: "gpt-5.1-mini",
+      model: "gpt-5-mini",
       messages,
-      max_tokens: 16000,
+      max_completion_tokens: 16000,
     });
 
     const textContent = response.choices[0]?.message?.content;
