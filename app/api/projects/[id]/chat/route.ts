@@ -2,6 +2,7 @@ import { auth } from "@clerk/nextjs/server";
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 
+import { AIModel, ChatMessage } from "@/lib/aiTypes";
 import { chatWithAI } from "@/lib/aiChat";
 
 // GET: Fetch chat history
@@ -95,11 +96,17 @@ export async function POST(
 
     // Get request body
     const body = await req.json();
-    const { message } = body;
+    const { message, aiModel } = body;
 
     if (!message) {
       return NextResponse.json({ error: "Message required" }, { status: 400 });
     }
+
+    // Validate AI model (fall back to project's default if not provided)
+    const validModels = ["claude", "chatgpt", "gemini"];
+    const selectedModel = aiModel && validModels.includes(aiModel)
+      ? aiModel
+      : ((project.aiModel as AIModel) || "claude");
 
     // Get chat history before saving new message
     const previousMessages = await prisma.chatMessage.findMany({
@@ -117,6 +124,7 @@ export async function POST(
         projectId: id,
         role: "user",
         content: message,
+        aiModel: selectedModel,
       },
     });
 
@@ -125,7 +133,12 @@ export async function POST(
 
     // Call AI to get response with chat history for context
     try {
-      const result = await chatWithAI(message, currentFiles, previousMessages);
+      const result = await chatWithAI(
+        message,
+        currentFiles,
+        previousMessages as ChatMessage[],
+        selectedModel as AIModel
+      );
 
       // Merge fileChanges with current files (only update changed files)
       let updatedFiles = { ...currentFiles };
@@ -155,6 +168,7 @@ export async function POST(
           role: "assistant",
           content: result.response,
           filesChanged: filesChanged.length > 0 ? filesChanged : undefined,
+          aiModel: selectedModel,
         },
       });
 

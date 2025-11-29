@@ -2,6 +2,14 @@
 
 import { useState, useRef, useEffect } from "react";
 import { MorphingSquare } from "../ui/morphing-square";
+import { AIModel, AI_MODELS } from "@/lib/aiTypes";
+import { ModelIcons } from "@/components/main/PromptInput";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 interface ProjectChatProps {
   projectId: string;
@@ -12,6 +20,7 @@ interface Message {
   id?: string;
   role: "user" | "assistant";
   content: string;
+  aiModel?: AIModel;
   filesChanged?: string[];
   createdAt?: string;
 }
@@ -23,6 +32,7 @@ export default function ProjectChat({
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [selectedModel, setSelectedModel] = useState<AIModel>("claude");
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   // Load chat history on mount
@@ -60,6 +70,7 @@ export default function ProjectChat({
     };
     setMessages((prev) => [...prev, userMessage]);
     const messageToSend = input;
+    const modelToUse = selectedModel;
     setInput("");
     setIsLoading(true);
 
@@ -68,7 +79,7 @@ export default function ProjectChat({
       const response = await fetch(`/api/projects/${projectId}/chat`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ message: messageToSend }),
+        body: JSON.stringify({ message: messageToSend, aiModel: modelToUse }),
       });
 
       if (!response.ok) throw new Error("Failed to get response");
@@ -220,27 +231,73 @@ export default function ProjectChat({
               </div>
 
               {/* Bottom Layer - Actions */}
-              <div className="px-4 py-1.5 flex items-center justify-between">
-                {/* Plus Button */}
-                <button
-                  type="button"
-                  className="shrink-0 text-white/40 hover:text-white/60 transition-colors"
-                  title="Add attachment"
-                >
-                  <svg
-                    className="w-3.5 h-3.5"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                    strokeWidth={2.5}
+              <div className="px-2 py-1.5 flex items-center justify-between">
+                <div className="flex items-center gap-1">
+                  <button
+                    disabled={isLoading}
+                    className="p-1 hover:bg-white/10 rounded-full transition-colors disabled:opacity-50"
                   >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      d="M12 4v16m8-8H4"
-                    />
-                  </svg>
-                </button>
+                    <svg
+                      className="w-3 h-3 text-white"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M12 4v16m8-8H4"
+                      />
+                    </svg>
+                  </button>
+
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <button
+                        disabled={isLoading}
+                        className="flex items-center gap-2 px-2 py-1 rounded-lg transition-colors text-white text-xs font-medium disabled:opacity-50 border border-white/8 focus:outline-none"
+                      >
+                        {ModelIcons[selectedModel]}
+                        <span>
+                          {AI_MODELS.find((m) => m.id === selectedModel)?.name}
+                        </span>
+                        <svg
+                          className="w-3 h-3 ml-1"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M19 9l-7 7-7-7"
+                          />
+                        </svg>
+                      </button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent
+                      align="start"
+                      className="w-[200px] border-white/8 p-2"
+                    >
+                      {AI_MODELS.map((model) => (
+                        <DropdownMenuItem
+                          key={model.id}
+                          onClick={() => setSelectedModel(model.id)}
+                          className="flex items-start gap-3 px-2 py-2 cursor-pointer rounded-lg hover:bg-white/10 focus:bg-white/10 data-highlighted:bg-white/10"
+                        >
+                          <div className="mt-0.5">{ModelIcons[model.id]}</div>
+                          <div className="flex-1">
+                            <div className="text-white text-xs font-medium">
+                              {model.name}
+                            </div>
+                          </div>
+                        </DropdownMenuItem>
+                      ))}
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                </div>
 
                 {/* Submit Button */}
                 <button

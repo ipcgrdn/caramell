@@ -10,7 +10,7 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const { prompt } = await req.json();
+    const { prompt, aiModel } = await req.json();
 
     if (!prompt || prompt.trim().length === 0) {
       return NextResponse.json(
@@ -18,6 +18,10 @@ export async function POST(req: Request) {
         { status: 400 }
       );
     }
+
+    // Validate AI model
+    const validModels = ["claude", "chatgpt", "gemini"];
+    const selectedModel = aiModel && validModels.includes(aiModel) ? aiModel : "claude";
 
     // Find user in database
     const user = await prisma.user.findUnique({
@@ -34,6 +38,7 @@ export async function POST(req: Request) {
         userId: user.id,
         prompt: prompt.trim(),
         status: "generating",
+        aiModel: selectedModel,
       },
     });
 

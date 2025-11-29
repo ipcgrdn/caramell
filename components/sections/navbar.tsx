@@ -18,9 +18,9 @@ export default function Navbar() {
 
   return (
     <nav
-      className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
+      className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ease-in-out ${
         isScrolled
-          ? "px-8 py-4 mx-auto max-w-4xl mt-4 rounded-4xl bg-[#1a1a1a] backdrop-blur-xl"
+          ? "px-8 py-4 mx-auto max-w-4xl mt-4 rounded-4xl bg-white/95 backdrop-blur-xl shadow-lg border border-black/10"
           : "px-12 py-8"
       }`}
     >
@@ -28,7 +28,9 @@ export default function Navbar() {
         {/* Left - Logo */}
         <div className="flex items-center justify-start">
           <Link href="/" className="flex items-center">
-            <span className="text-white hover:text-[#D4A574] transition-colors font-playfair font-bold text-lg">
+            <span className={`hover:text-[#D4A574] transition-colors font-playfair font-bold text-lg ${
+              isScrolled ? "text-black" : "text-white"
+            }`}>
               Caramell
             </span>
           </Link>
@@ -38,19 +40,25 @@ export default function Navbar() {
         <div className="flex items-center justify-center gap-8">
           <Link
             href="/blog"
-            className="text-white hover:text-[#D4A574] transition-colors text-sm font-medium"
+            className={`hover:text-[#D4A574] transition-colors text-sm font-medium ${
+              isScrolled ? "text-black/80" : "text-white"
+            }`}
           >
             Blog
           </Link>
           <Link
             href="/pricing"
-            className="text-white hover:text-[#D4A574] transition-colors text-sm font-medium"
+            className={`hover:text-[#D4A574] transition-colors text-sm font-medium ${
+              isScrolled ? "text-black/80" : "text-white"
+            }`}
           >
             Pricing
           </Link>
           <Link
             href="/enterprises"
-            className="text-white hover:text-[#D4A574] transition-colors text-sm font-medium"
+            className={`hover:text-[#D4A574] transition-colors text-sm font-medium ${
+              isScrolled ? "text-black/80" : "text-white"
+            }`}
           >
             Enterprise
           </Link>
@@ -62,7 +70,11 @@ export default function Navbar() {
             <div className="flex items-center gap-3">
               <Link
                 href="/signin"
-                className="px-4 py-2 text-white text-sm font-medium bg-white/10 hover:bg-black/20 rounded-lg transition-colors backdrop-blur-sm"
+                className={`px-4 py-2 text-sm font-medium rounded-lg transition-all backdrop-blur-sm ${
+                  isScrolled
+                    ? "text-black bg-black/5 hover:bg-black/10"
+                    : "text-white bg-white/10 hover:bg-black/20"
+                }`}
               >
                 Log in
               </Link>
@@ -80,9 +92,9 @@ export default function Navbar() {
                 elements: {
                   avatarBox: "w-10 h-10",
                   userButtonPopoverCard:
-                    "bg-[#1a1a1a]/95 backdrop-blur-xl border border-white/30",
+                    "bg-white/95 backdrop-blur-xl border border-black/10",
                   userButtonPopoverActionButton:
-                    "!text-white hover:bg-white/10",
+                    "!text-white hover:bg-black/5",
                   userButtonPopoverActionButtonText: "!text-white",
                   userButtonPopoverFooter: "hidden",
                 },

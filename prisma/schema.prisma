@@ -38,6 +38,7 @@ model Project {
   files         Json?
   status        String   @default("generating")
   screenshot    String?
+  aiModel       String   @default("claude")
 
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
@@ -57,6 +58,7 @@ model ChatMessage {
   role          String
   content       String   @db.Text
   filesChanged  Json?
+  aiModel       String?
 
   createdAt     DateTime @default(now())
 

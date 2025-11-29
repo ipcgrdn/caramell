@@ -1,7 +1,7 @@
 import { auth } from "@clerk/nextjs/server";
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
-
+import { AIModel } from "@/lib/aiTypes";
 import { generateLandingPageStream } from "@/lib/aiGenerator";
 
 export const runtime = "nodejs";
@@ -52,8 +52,9 @@ export async function POST(
             )
           );
 
-          // 2. AI 스트리밍 생성
-          const generator = generateLandingPageStream(project.prompt);
+          // 2. AI 스트리밍 생성 (선택한 모델 사용)
+          const aiModel = (project.aiModel as AIModel) || "claude";
+          const generator = generateLandingPageStream(project.prompt, aiModel);
           let result;
 
           // 3. 제너레이터를 끝까지 실행하여 return 값 가져오기
