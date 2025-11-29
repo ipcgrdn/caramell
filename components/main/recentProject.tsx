@@ -69,7 +69,7 @@ export default function RecentProject() {
               >
                 <div className="bg-black/5 hover:bg-black/10 rounded-2xl overflow-hidden">
                   {/* Project Thumbnail */}
-                  <div className="aspect-image relative overflow-hidden">
+                  <div className="aspect-video relative overflow-hidden bg-gray-100">
                     {getProjectThumbnail(project) ? (
                       <Image
                         src={getProjectThumbnail(project)!}
@@ -81,7 +81,7 @@ export default function RecentProject() {
                     ) : (
                       <div className="w-full h-full flex items-center justify-center">
                         <svg
-                          className="w-16 h-16 text-gray-300"
+                          className="w-24 h-24 text-gray-300"
                           fill="none"
                           stroke="currentColor"
                           viewBox="0 0 24 24"
