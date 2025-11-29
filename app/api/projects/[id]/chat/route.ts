@@ -2,8 +2,7 @@ import { auth } from "@clerk/nextjs/server";
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 
-import { chatWithAI } from "@/lib/aiGenerator";
-import { regenerateProjectScreenshot } from "@/lib/screenshot";
+import { chatWithAI } from "@/lib/aiChat";
 
 // GET: Fetch chat history
 export async function GET(
@@ -140,21 +139,10 @@ export async function POST(
         };
         filesChanged = Object.keys(result.fileChanges);
 
-        // Regenerate screenshot since files changed
-        let screenshotPath: string | null = null;
-        try {
-          screenshotPath = await regenerateProjectScreenshot(id, updatedFiles);
-        } catch (screenshotError) {
-          console.error("Screenshot regeneration failed:", screenshotError);
-          // Continue without screenshot update
-        }
-
-        // Update project with merged files and new screenshot
         await prisma.project.update({
           where: { id },
           data: {
             files: updatedFiles,
-            screenshot: screenshotPath || project.screenshot, // Keep old screenshot if regeneration fails
             updatedAt: new Date(),
           },
         });

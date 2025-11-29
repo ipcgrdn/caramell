@@ -3,7 +3,6 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 
 import { generateLandingPage } from "@/lib/aiGenerator";
-import { regenerateProjectScreenshot } from "@/lib/screenshot";
 
 export async function POST(
   _req: Request,
@@ -39,27 +38,49 @@ export async function POST(
 
     // Generate code
     try {
-      const files = await generateLandingPage(project.prompt);
+      const { files, message } = await generateLandingPage(project.prompt);
 
-      // Generate screenshot from the generated files
-      let screenshotPath: string | null = null;
-      try {
-        screenshotPath = await regenerateProjectScreenshot(id, files);
-      } catch (screenshotError) {
-        console.error("Screenshot generation failed:", screenshotError);
-        // Continue without screenshot
-      }
-
-      // Update project with generated files and screenshot
+      // Note: 스크린샷은 클라이언트 사이드에서 자동으로 캡처됨
       await prisma.project.update({
         where: { id },
         data: {
           files,
           status: "ready",
           name: project.name || extractTitleFromPrompt(project.prompt),
-          screenshot: screenshotPath,
         },
       });
+
+      // 채팅 기록에 생성 결과 저장 (최초 프롬프트 포함)
+      const existingMessages = await prisma.chatMessage.count({
+        where: { projectId: id },
+      });
+
+      const chatWrites: Promise<unknown>[] = [];
+
+      if (existingMessages === 0) {
+        chatWrites.push(
+          prisma.chatMessage.create({
+            data: {
+              projectId: id,
+              role: "user",
+              content: project.prompt,
+            },
+          })
+        );
+      }
+
+      chatWrites.push(
+        prisma.chatMessage.create({
+          data: {
+            projectId: id,
+            role: "assistant",
+            content: message,
+            filesChanged: Object.keys(files),
+          },
+        })
+      );
+
+      await Promise.all(chatWrites);
 
       return NextResponse.json({ success: true });
     } catch (error) {

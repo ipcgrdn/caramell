@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo } from "react";
+import { useMemo, useRef, useImperativeHandle, forwardRef } from "react";
 
 type ViewportSize = "desktop" | "tablet" | "mobile";
 
@@ -9,175 +9,67 @@ interface ProjectScreenProps {
   viewportSize?: ViewportSize;
 }
 
+export interface ProjectScreenRef {
+  getIframeElement: () => HTMLIFrameElement | null;
+}
+
 const viewportDimensions = {
   desktop: { width: "100%", maxWidth: "100%" },
   tablet: { width: "768px", maxWidth: "768px" },
   mobile: { width: "375px", maxWidth: "375px" },
 };
 
-export default function ProjectScreen({
-  files,
-  viewportSize = "desktop",
-}: ProjectScreenProps) {
-  // Generate preview HTML from React files
-  const previewHTML = useMemo(() => {
-    if (!files || Object.keys(files).length === 0) {
-      return null;
+const ProjectScreen = forwardRef<ProjectScreenRef, ProjectScreenProps>(
+  function ProjectScreen({ files, viewportSize = "desktop" }, ref) {
+    const iframeRef = useRef<HTMLIFrameElement>(null);
+
+    // iframe 요소에 접근할 수 있도록 ref 노출
+    useImperativeHandle(ref, () => ({
+      getIframeElement: () => iframeRef.current,
+    }));
+
+    // Get HTML content directly
+    const previewHTML = useMemo(() => {
+      if (!files || Object.keys(files).length === 0) {
+        return null;
+      }
+
+      // Simply return the index.html content
+      return files["index.html"] || null;
+    }, [files]);
+
+    if (!previewHTML) {
+      return (
+        <div className="flex items-center justify-center h-full bg-white">
+          <div className="text-center">
+            <p className="text-black text-sm">No preview available</p>
+          </div>
+        </div>
+      );
     }
 
-    // Transform files to browser-executable code
-    const { code, mainComponent } = transformFilesToBrowserCode(files);
+    const dimensions = viewportDimensions[viewportSize];
 
-    // Build complete HTML with React runtime
-    return buildPreviewHTML(code, mainComponent);
-  }, [files]);
-
-  if (!previewHTML) {
     return (
-      <div className="flex items-center justify-center h-full bg-white">
-        <div className="text-center">
-          <p className="text-black text-sm">No preview available</p>
+      <div className="h-full w-full overflow-auto flex items-start justify-center">
+        <div
+          className="h-full transition-all duration-300"
+          style={{
+            width: dimensions.width,
+            maxWidth: dimensions.maxWidth,
+          }}
+        >
+          <iframe
+            ref={iframeRef}
+            srcDoc={previewHTML}
+            title="Preview"
+            className="w-full h-full border-0 p-2 rounded-2xl"
+            sandbox="allow-scripts allow-same-origin allow-forms"
+          />
         </div>
       </div>
     );
   }
+);
 
-  const dimensions = viewportDimensions[viewportSize];
-
-  return (
-    <div className="h-full w-full overflow-auto flex items-start justify-center">
-      <div
-        className="h-full transition-all duration-300"
-        style={{
-          width: dimensions.width,
-          maxWidth: dimensions.maxWidth,
-        }}
-      >
-        <iframe
-          srcDoc={previewHTML}
-          title="Preview"
-          className="w-full h-full border-0 p-2 rounded-2xl"
-          sandbox="allow-scripts allow-same-origin allow-forms"
-        />
-      </div>
-    </div>
-  );
-}
-
-// Transform React files to browser-executable code
-function transformFilesToBrowserCode(files: Record<string, string>): {
-  code: string;
-  mainComponent: string;
-} {
-  let code = "";
-  let mainComponent = "Page";
-
-  // Sort files to ensure components are defined before page
-  const sortedFiles = Object.entries(files).sort(([pathA], [pathB]) => {
-    // Components first, then app/page.tsx
-    if (pathA.startsWith("components/")) return -1;
-    if (pathB.startsWith("components/")) return 1;
-    return 0;
-  });
-
-  for (const [filePath, content] of sortedFiles) {
-    // Skip non-tsx/jsx files for now
-    if (!filePath.endsWith(".tsx") && !filePath.endsWith(".jsx")) {
-      continue;
-    }
-
-    // Transform the code
-    let transformed = content;
-
-    // Remove 'use client' directive
-    transformed = transformed.replace(/['"]use client['"];?\n/g, "");
-
-    // Remove import statements (we'll use CDN for React)
-    transformed = transformed.replace(/^import .+$/gm, "");
-
-    // Extract function name from app/page.tsx for main component
-    if (filePath === "app/page.tsx") {
-      const functionMatch =
-        transformed.match(/export\s+default\s+function\s+(\w+)/) ||
-        transformed.match(/function\s+(\w+)\s*\(/);
-      if (functionMatch && functionMatch[1]) {
-        mainComponent = functionMatch[1];
-      }
-    }
-
-    // Remove export default, just keep the function
-    transformed = transformed.replace(/export default /g, "");
-
-    // Clean up empty lines
-    transformed = transformed.trim();
-
-    code += `\n${transformed}\n`;
-  }
-
-  return { code, mainComponent };
-}
-
-// Build complete HTML with React runtime
-function buildPreviewHTML(code: string, mainComponent: string): string {
-  return `<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
-  <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
-  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
-  <script src="https://cdn.tailwindcss.com"></script>
-  <style>
-    * {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
-    }
-    body {
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
-        'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
-        sans-serif;
-      -webkit-font-smoothing: antialiased;
-      -moz-osx-font-smoothing: grayscale;
-    }
-  </style>
-</head>
-<body>
-  <div id="root"></div>
-
-  <script type="text/babel">
-    const { useState, useEffect, useMemo, useCallback, useRef } = React;
-
-    ${code}
-
-    // Render the main component
-    const root = ReactDOM.createRoot(document.getElementById('root'));
-
-    // Try to render main component
-    try {
-      if (typeof ${mainComponent} !== 'undefined') {
-        root.render(<${mainComponent} />);
-      } else {
-        root.render(
-          <div style={{ padding: '2rem', textAlign: 'center' }}>
-            <p>${mainComponent} component not found</p>
-            <p style={{ fontSize: '0.875rem', color: '#666', marginTop: '0.5rem' }}>
-              Available components: {Object.keys(window).filter(k => k[0] === k[0].toUpperCase()).join(', ')}
-            </p>
-          </div>
-        );
-      }
-    } catch (error) {
-      console.error('Render error:', error);
-      root.render(
-        <div style={{ padding: '2rem', textAlign: 'center', color: 'red' }}>
-          <h3>Error rendering preview</h3>
-          <p>{error.message}</p>
-        </div>
-      );
-    }
-  </script>
-</body>
-</html>`;
-}
+export default ProjectScreen;

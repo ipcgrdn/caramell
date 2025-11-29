@@ -1,259 +1,154 @@
-import puppeteer from "puppeteer";
-import { writeFile } from "fs/promises";
-import { join } from "path";
+import html2canvas from "html2canvas";
 
 /**
- * Extract HTML content from project files for screenshot generation
+ * 모든 리소스 로딩 완료 대기 (이미지, 폰트 등)
  */
-export function extractHtmlFromFiles(
-  files: Record<string, string>
-): string | null {
-  // If there's an index.html file, use it directly
-  if (files["index.html"]) {
-    return files["index.html"];
-  }
-
-  // For Next.js projects, we need to convert JSX to executable HTML
-  const pageContent = files["app/page.tsx"] || files["pages/index.tsx"] || "";
-
-  if (!pageContent) {
-    return null;
-  }
-
-  // Process all component files
-  const componentFiles = Object.entries(files)
-    .filter(([path]) => path.endsWith(".tsx"))
-    .sort(([pathA], [pathB]) => {
-      // Sort so that app/page.tsx comes last
-      if (pathA.includes("page.tsx")) return 1;
-      if (pathB.includes("page.tsx")) return -1;
-      return 0;
+async function waitForResources(doc: Document): Promise<void> {
+  // readyState 확인
+  if (doc.readyState !== "complete") {
+    await new Promise((resolve) => {
+      doc.addEventListener("readystatechange", () => {
+        if (doc.readyState === "complete") resolve(true);
+      });
     });
+  }
 
-  const processedComponents = componentFiles
-    .map(([path, content]) => processComponentFile(content, path))
-    .join("\n\n");
-
-  // Create a standalone HTML that can render the React components
-  return `
-<!DOCTYPE html>
-<html>
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <script src="https://cdn.tailwindcss.com"></script>
-  <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
-  <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
-  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
-  <style>
-    body {
-      margin: 0;
-      padding: 0;
-      min-height: 100vh;
-    }
-  </style>
-</head>
-<body>
-  <div id="root"></div>
-  <script type="text/babel">
-    const { useState, useEffect, useRef } = React;
-
-    ${processedComponents}
-
-    // Find and render the main page component
-    const AppComponent = ${extractMainComponent(pageContent)};
-
-    const root = ReactDOM.createRoot(document.getElementById('root'));
-    root.render(React.createElement(AppComponent));
-  </script>
-</body>
-</html>
-  `.trim();
-}
-
-/**
- * Process a single component file for browser execution
- */
-function processComponentFile(content: string, filePath: string): string {
-  let processed = content;
-
-  // Remove 'use client' directive
-  processed = processed.replace(/['"]use client['"];?\s*/g, "");
-
-  // Remove all import statements
-  processed = processed.replace(/import\s+.*?from\s+['"].*?['"];?\s*/g, "");
-
-  // Convert "export default function Component" to "function Component"
-  processed = processed.replace(
-    /export\s+default\s+function\s+(\w+)/g,
-    "function $1"
+  // 이미지 로딩 대기
+  const images = Array.from(doc.images);
+  await Promise.all(
+    images.map((img) => {
+      if (img.complete) return Promise.resolve();
+      return new Promise((resolve) => {
+        img.onload = () => resolve(true);
+        img.onerror = () => resolve(true); // 에러도 완료로 처리
+      });
+    })
   );
 
-  // Convert "export function Component" to "function Component"
-  processed = processed.replace(/export\s+function\s+(\w+)/g, "function $1");
+  // 폰트 로딩 대기
+  if (doc.fonts) {
+    await doc.fonts.ready.catch(() => {});
+  }
 
-  // Handle "export default Component" at the end
-  processed = processed.replace(/export\s+default\s+(\w+);?\s*$/g, "// $1");
-
-  return `// Component from ${filePath}\n${processed}`;
+  // 최종 렌더링 대기 (애니메이션, CSS 전환 완료)
+  await new Promise((resolve) => setTimeout(resolve, 1000));
 }
 
 /**
- * Extract the main component to render
+ * iframe의 내용을 캡처하여 서버에 업로드 (재시도 로직 포함)
  */
-function extractMainComponent(content: string): string {
-  // Try to find "export default function ComponentName"
-  let match = content.match(/export\s+default\s+function\s+(\w+)/);
-  if (match) {
-    return match[1];
+export async function captureAndUploadScreenshot(
+  iframeElement: HTMLIFrameElement,
+  projectId: string
+): Promise<boolean> {
+  const maxRetries = 3;
+
+  for (let attempt = 1; attempt <= maxRetries; attempt++) {
+    try {
+      const result = await captureScreenshotOnce(iframeElement, projectId);
+      if (result) return true;
+
+      // 실패 시 재시도 전 대기
+      if (attempt < maxRetries) {
+        await new Promise((resolve) => setTimeout(resolve, 1000));
+      }
+    } catch (error) {
+      console.error(`Screenshot attempt ${attempt} failed:`, error);
+      if (attempt === maxRetries) return false;
+    }
   }
 
-  // Try to find "export default ComponentName"
-  match = content.match(/export\s+default\s+(\w+)/);
-  if (match) {
-    return match[1];
-  }
-
-  // Try to find any function declaration
-  match = content.match(/function\s+(\w+)/);
-  if (match) {
-    return match[1];
-  }
-
-  // Fallback: create error component
-  return "(() => React.createElement('div', { style: { padding: '20px', color: 'red' } }, 'Error: Could not find main component'))";
+  return false;
 }
 
 /**
- * Regenerate screenshot for a project based on its current files
+ * 단일 스크린샷 캡처 시도
  */
-export async function regenerateProjectScreenshot(
-  projectId: string,
-  files: Record<string, string>
-): Promise<string | null> {
-  const htmlContent = extractHtmlFromFiles(files);
-
-  if (!htmlContent) {
-    console.warn("No HTML content found for screenshot generation");
-    return null;
-  }
-
-  try {
-    return await generateScreenshot(htmlContent, projectId);
-  } catch (error) {
-    console.error("Screenshot regeneration failed:", error);
-    return null;
-  }
-}
-
-export async function generateScreenshot(
-  html: string,
+async function captureScreenshotOnce(
+  iframeElement: HTMLIFrameElement,
   projectId: string
-): Promise<string> {
-  let browser;
-
+): Promise<boolean> {
   try {
-    // Launch browser
-    browser = await puppeteer.launch({
-      headless: true,
-      args: [
-        "--no-sandbox",
-        "--disable-setuid-sandbox",
-        "--disable-dev-shm-usage",
-        "--disable-gpu",
-      ],
-    });
+    // iframe의 document에 접근
+    const iframeDocument =
+      iframeElement.contentDocument || iframeElement.contentWindow?.document;
 
-    const page = await browser.newPage();
-
-    // Set viewport to standard desktop size
-    await page.setViewport({
-      width: 1920,
-      height: 1080,
-      deviceScaleFactor: 1,
-    });
-
-    // Set content
-    await page.setContent(html, {
-      waitUntil: "networkidle0",
-      timeout: 30000,
-    });
-
-    // Wait for React to render and animations/fonts to load
-    // This is important for Babel to transpile and React to mount
-    await new Promise((resolve) => setTimeout(resolve, 5000));
-
-    // Take screenshot
-    const screenshot = await page.screenshot({
-      type: "png",
-      fullPage: false, // Only capture viewport
-    });
-
-    // Save to public/screenshots
-    const filename = `${projectId}.png`;
-    const filepath = join(process.cwd(), "public", "screenshots", filename);
-    await writeFile(filepath, screenshot);
-
-    // Return the public URL path
-    return `/screenshots/${filename}`;
-  } catch (error) {
-    console.error("Screenshot generation error:", error);
-    throw new Error("Failed to generate screenshot");
-  } finally {
-    if (browser) {
-      await browser.close();
+    if (!iframeDocument || !iframeDocument.body) {
+      console.error("Cannot access iframe content");
+      return false;
     }
-  }
-}
 
-export async function generateScreenshotFromUrl(
-  url: string,
-  projectId: string
-): Promise<string> {
-  let browser;
+    // 모든 리소스 로딩 대기
+    await waitForResources(iframeDocument);
 
-  try {
-    browser = await puppeteer.launch({
-      headless: true,
-      args: [
-        "--no-sandbox",
-        "--disable-setuid-sandbox",
-        "--disable-dev-shm-usage",
-        "--disable-gpu",
-      ],
+    // 고정 크기: Full HD (1920 x 1080)
+    const viewportWidth = 1920;
+    const viewportHeight = 1080;
+
+    const canvas = await html2canvas(iframeDocument.body, {
+      backgroundColor: "#ffffff",
+      scale: 1,
+      logging: false, // 로그 비활성화
+      useCORS: true,
+      allowTaint: true,
+      imageTimeout: 15000,
+      foreignObjectRendering: false,
+      // viewport 크기만 캡처 (스크롤된 영역 제외)
+      width: viewportWidth,
+      height: viewportHeight,
+      windowWidth: viewportWidth,
+      windowHeight: viewportHeight,
+      x: 0,
+      y: 0,
     });
 
-    const page = await browser.newPage();
-
-    await page.setViewport({
-      width: 1920,
-      height: 1080,
-      deviceScaleFactor: 1,
-    });
-
-    await page.goto(url, {
-      waitUntil: "networkidle0",
-      timeout: 30000,
-    });
-
-    await new Promise((resolve) => setTimeout(resolve, 1000));
-
-    const screenshot = await page.screenshot({
-      type: "png",
-      fullPage: false,
-    });
-
-    const filename = `${projectId}.png`;
-    const filepath = join(process.cwd(), "public", "screenshots", filename);
-    await writeFile(filepath, screenshot);
-
-    return `/screenshots/${filename}`;
-  } catch (error) {
-    console.error("Screenshot generation error:", error);
-    throw new Error("Failed to generate screenshot from URL");
-  } finally {
-    if (browser) {
-      await browser.close();
+    // Canvas가 유효한지 확인
+    if (canvas.width === 0 || canvas.height === 0) {
+      console.error("Canvas has invalid dimensions");
+      return false;
     }
+
+    // Canvas를 Blob으로 변환
+    const blob = await new Promise<Blob | null>((resolve) => {
+      try {
+        canvas.toBlob(
+          (blob) => {
+            if (blob) {
+              resolve(blob);
+            } else {
+              resolve(null);
+            }
+          },
+          "image/png"
+          // 품질 파라미터 제거 (PNG는 품질 파라미터를 무시함)
+        );
+      } catch (error) {
+        console.error("toBlob threw error:", error);
+        resolve(null);
+      }
+    });
+
+    if (!blob) {
+      console.error("Failed to create blob from canvas");
+      return false;
+    }
+
+    // FormData로 서버에 전송
+    const formData = new FormData();
+    formData.append("screenshot", blob, "screenshot.png");
+
+    const response = await fetch(`/api/projects/${projectId}/screenshot`, {
+      method: "POST",
+      body: formData,
+    });
+
+    if (!response.ok) {
+      console.error("Failed to upload screenshot:", response.statusText);
+      return false;
+    }
+    return true;
+  } catch (error) {
+    console.error("Screenshot capture error:", error);
+    return false;
   }
 }

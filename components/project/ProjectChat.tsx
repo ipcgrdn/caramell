@@ -1,9 +1,9 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
+import { MorphingSquare } from "../ui/morphing-square";
 
 interface ProjectChatProps {
-  initialPrompt: string;
   projectId: string;
   onFilesUpdate?: () => void;
 }
@@ -17,11 +17,9 @@ interface Message {
 }
 
 export default function ProjectChat({
-  initialPrompt,
   projectId,
   onFilesUpdate,
 }: ProjectChatProps) {
-  const [showFullPrompt, setShowFullPrompt] = useState(false);
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
@@ -119,67 +117,6 @@ export default function ProjectChat({
 
       {/* Messages */}
       <div className="flex-1 overflow-auto p-6 pb-32 space-y-4 relative z-10">
-        {/* Initial User Prompt */}
-        <div className="space-y-2">
-          <div className="bg-white/5 backdrop-blur-sm text-white rounded-2xl px-5 py-4 relative border border-white/10">
-            <div
-              className={`text-sm leading-relaxed ${
-                !showFullPrompt && initialPrompt.length > 200
-                  ? "line-clamp-3"
-                  : ""
-              }`}
-            >
-              {initialPrompt}
-            </div>
-            {initialPrompt.length > 200 && (
-              <button
-                onClick={() => setShowFullPrompt(!showFullPrompt)}
-                className="mt-2 text-xs text-white/60 hover:text-white flex items-center gap-1"
-              >
-                {showFullPrompt ? "Show Less" : "Show All"}
-                <svg
-                  className={`w-3 h-3 transition-transform ${
-                    showFullPrompt ? "rotate-180" : ""
-                  }`}
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M19 9l-7 7-7-7"
-                  />
-                </svg>
-              </button>
-            )}
-          </div>
-
-          {/* Copy Button */}
-          <div className="flex items-center justify-end">
-            <button
-              onClick={() => handleCopyMessage(initialPrompt)}
-              className="text-white/40 hover:text-white/60 p-1 transition-colors"
-              title="Copy message"
-            >
-              <svg
-                className="w-3.5 h-3.5"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-                strokeWidth={2}
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"
-                />
-              </svg>
-            </button>
-          </div>
-        </div>
-
         {/* Conversation Messages */}
         {messages.map((message, index) => (
           <div key={index} className="space-y-2">
@@ -249,8 +186,8 @@ export default function ProjectChat({
 
         {/* Loading State */}
         {isLoading && (
-          <div className="flex items-center">
-            <div className="w-2 h-2 bg-[#D4A574] rounded-full animate-pulse" />
+          <div className="flex items-center pl-4">
+            <MorphingSquare className="w-4 h-4 bg-[#D4A574]" />
           </div>
         )}
       </div>

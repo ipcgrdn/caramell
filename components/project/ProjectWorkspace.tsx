@@ -1,11 +1,15 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { useRouter } from "next/navigation";
+
 import ProjectNav from "./ProjectNav";
 import ProjectCode from "./ProjectCode";
-import ProjectScreen from "./ProjectScreen";
+import ProjectScreen, { ProjectScreenRef } from "./ProjectScreen";
 import ProjectChat from "./ProjectChat";
+
+import { MorphingSquare } from "../ui/morphing-square";
+import { captureAndUploadScreenshot } from "@/lib/screenshot";
 
 interface Project {
   id: string;
@@ -19,6 +23,7 @@ interface Project {
 
 export default function ProjectWorkspace({ project }: { project: Project }) {
   const router = useRouter();
+  const projectScreenRef = useRef<ProjectScreenRef>(null);
   const [currentStatus, setCurrentStatus] = useState(project.status);
   const [currentView, setCurrentView] = useState<"code" | "preview">("preview");
   const [viewportSize, setViewportSize] = useState<
@@ -27,6 +32,27 @@ export default function ProjectWorkspace({ project }: { project: Project }) {
   const [isChatOpen, setIsChatOpen] = useState(true);
   const [chatWidth, setChatWidth] = useState(400);
   const [isResizing, setIsResizing] = useState(false);
+  const [isCapturingScreenshot, setIsCapturingScreenshot] = useState(false);
+
+  // 스크린샷 캡처 함수 (백그라운드에서 캡처)
+  const handleCaptureScreenshot = useCallback(async () => {
+    if (isCapturingScreenshot) return;
+
+    const iframe = projectScreenRef.current?.getIframeElement();
+    if (!iframe) {
+      console.warn("Preview iframe not ready yet, will retry...");
+      return;
+    }
+
+    setIsCapturingScreenshot(true);
+    try {
+      await captureAndUploadScreenshot(iframe, project.id);
+    } catch (error) {
+      console.error("Failed to capture screenshot:", error);
+    } finally {
+      setIsCapturingScreenshot(false);
+    }
+  }, [isCapturingScreenshot, project.id]);
 
   // Poll for status updates if generating
   useEffect(() => {
@@ -38,12 +64,17 @@ export default function ProjectWorkspace({ project }: { project: Project }) {
         if (data.status !== "generating") {
           setCurrentStatus(data.status);
           router.refresh();
+
+          // 생성이 완료되면 스크린샷 자동 캡처
+          if (data.status === "ready") {
+            setTimeout(() => handleCaptureScreenshot(), 1500);
+          }
         }
       }, 2000);
 
       return () => clearInterval(interval);
     }
-  }, [currentStatus, project.id, router]);
+  }, [currentStatus, project.id, router, handleCaptureScreenshot]);
 
   // Handle chat resize
   const handleResizeStart = () => {
@@ -71,28 +102,7 @@ export default function ProjectWorkspace({ project }: { project: Project }) {
     return (
       <div className="min-h-screen bg-black flex items-center justify-center">
         <div className="text-center">
-          <div className="mb-8">
-            <svg
-              className="w-8 h-8 mx-auto animate-spin text-[#D4A574]"
-              fill="none"
-              viewBox="0 0 24 24"
-            >
-              <circle
-                className="opacity-25"
-                cx="12"
-                cy="12"
-                r="10"
-                stroke="currentColor"
-                strokeWidth="2"
-              />
-              <path
-                className="opacity-75"
-                fill="currentColor"
-                d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-              />
-            </svg>
-          </div>
-          <h1 className="text-2xl font-playfair text-white mb-4">Generating</h1>
+          <MorphingSquare message="Generating..." />
         </div>
       </div>
     );
@@ -103,7 +113,7 @@ export default function ProjectWorkspace({ project }: { project: Project }) {
     return (
       <div className="min-h-screen bg-black flex items-center justify-center">
         <div className="text-center">
-          <h1 className="text-2xl font-bold text-red-400 mb-4">
+          <h1 className="text-2xl font-bold text-white mb-4">
             Generation failed
           </h1>
           <p className="text-white/60 mb-8">
@@ -111,7 +121,7 @@ export default function ProjectWorkspace({ project }: { project: Project }) {
           </p>
           <button
             onClick={() => router.push("/")}
-            className="px-6 py-3 bg-[#D4A574] hover:bg-[#C68E52] text-white rounded-lg transition-colors"
+            className="px-6 py-3 bg-[#D4A574] hover:bg-[#C68E52] text-black rounded-lg transition-colors"
           >
             Back to home
           </button>
@@ -141,15 +151,28 @@ export default function ProjectWorkspace({ project }: { project: Project }) {
           className="flex-1 overflow-hidden"
           style={{ pointerEvents: isResizing ? "none" : "auto" }}
         >
-          {currentView === "code" ? (
+          {/* Code 뷰 */}
+          <div className={currentView === "code" ? "h-full" : "hidden"}>
             <ProjectCode
               files={project.files}
               projectId={project.id}
-              onFilesUpdate={() => router.refresh()}
+              onFilesUpdate={() => {
+                setTimeout(async () => {
+                  await handleCaptureScreenshot();
+                  router.refresh();
+                }, 1500);
+              }}
             />
-          ) : (
-            <ProjectScreen files={project.files} viewportSize={viewportSize} />
-          )}
+          </div>
+
+          {/* Preview 뷰 - 항상 렌더링 (Code 뷰일 때는 숨김) */}
+          <div className={currentView === "preview" ? "h-full" : "hidden"}>
+            <ProjectScreen
+              ref={projectScreenRef}
+              files={project.files}
+              viewportSize={viewportSize}
+            />
+          </div>
         </div>
 
         {/* Right: Chat */}
@@ -169,9 +192,13 @@ export default function ProjectWorkspace({ project }: { project: Project }) {
             {/* Chat content */}
             <div className="flex-1 overflow-hidden">
               <ProjectChat
-                initialPrompt={project.prompt}
                 projectId={project.id}
-                onFilesUpdate={() => router.refresh()}
+                onFilesUpdate={() => {
+                  setTimeout(async () => {
+                    await handleCaptureScreenshot();
+                    router.refresh();
+                  }, 1500);
+                }}
               />
             </div>
           </div>

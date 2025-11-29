@@ -37,11 +37,11 @@ export default async function ProjectPage({
     return (
       <div className="min-h-screen bg-black flex items-center justify-center">
         <div className="text-center">
-          <h1 className="text-2xl font-bold text-white mb-4">
+          <h1 className="text-2xl font-bold text-white mb-8">
             Project not found
           </h1>
-          <a href="/" className="text-[#D4A574] hover:text-[#C68E52] underline">
-            Go back home
+          <a href="/" className="px-6 py-3 bg-[#D4A574] hover:bg-[#C68E52] text-black rounded-lg transition-colors">
+            Back to home
           </a>
         </div>
       </div>
