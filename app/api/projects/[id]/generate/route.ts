@@ -2,12 +2,17 @@ import { auth } from "@clerk/nextjs/server";
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 
-import { generateLandingPage } from "@/lib/aiGenerator";
+import { generateLandingPageStream } from "@/lib/aiGenerator";
+
+export const runtime = "nodejs";
+export const maxDuration = 300; // 5분
 
 export async function POST(
   _req: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  const encoder = new TextEncoder();
+
   try {
     const { userId } = await auth();
     const { id } = await params;
@@ -36,64 +41,123 @@ export async function POST(
       return NextResponse.json({ error: "Project not found" }, { status: 404 });
     }
 
-    // Generate code
-    try {
-      const { files, message } = await generateLandingPage(project.prompt);
+    // 스트리밍 응답 시작
+    const stream = new ReadableStream({
+      async start(controller) {
+        try {
+          // 1. 생성 시작 알림
+          controller.enqueue(
+            encoder.encode(
+              `data: ${JSON.stringify({ type: "generating" })}\n\n`
+            )
+          );
 
-      // Note: 스크린샷은 클라이언트 사이드에서 자동으로 캡처됨
-      await prisma.project.update({
-        where: { id },
-        data: {
-          files,
-          status: "ready",
-          name: project.name || extractTitleFromPrompt(project.prompt),
-        },
-      });
+          // 2. AI 스트리밍 생성
+          const generator = generateLandingPageStream(project.prompt);
+          let result;
 
-      // 채팅 기록에 생성 결과 저장 (최초 프롬프트 포함)
-      const existingMessages = await prisma.chatMessage.count({
-        where: { projectId: id },
-      });
+          // 3. 제너레이터를 끝까지 실행하여 return 값 가져오기
+          while (true) {
+            const { done, value } = await generator.next();
 
-      const chatWrites: Promise<unknown>[] = [];
+            if (done) {
+              // done일 때 value가 제너레이터의 return 값
+              result = value;
+              break;
+            }
+            // done이 아닐 때 value는 yield된 청크 (UI에 표시 안함)
+          }
 
-      if (existingMessages === 0) {
-        chatWrites.push(
-          prisma.chatMessage.create({
+          if (!result) {
+            throw new Error("Generation did not complete properly");
+          }
+
+          const { files, message } = result;
+
+          // 4. DB에 저장
+          await prisma.project.update({
+            where: { id },
             data: {
-              projectId: id,
-              role: "user",
-              content: project.prompt,
+              files,
+              status: "ready",
+              name: project.name || extractTitleFromPrompt(project.prompt),
             },
-          })
-        );
-      }
+          });
 
-      chatWrites.push(
-        prisma.chatMessage.create({
-          data: {
-            projectId: id,
-            role: "assistant",
-            content: message,
-            filesChanged: Object.keys(files),
-          },
-        })
-      );
+          // 5. 채팅 기록에 저장
+          const existingMessages = await prisma.chatMessage.count({
+            where: { projectId: id },
+          });
 
-      await Promise.all(chatWrites);
+          const chatWrites: Promise<unknown>[] = [];
 
-      return NextResponse.json({ success: true });
-    } catch (error) {
-      console.error("Generation error:", error);
+          if (existingMessages === 0) {
+            chatWrites.push(
+              prisma.chatMessage.create({
+                data: {
+                  projectId: id,
+                  role: "user",
+                  content: project.prompt,
+                },
+              })
+            );
+          }
 
-      // Mark as failed
-      await prisma.project.update({
-        where: { id },
-        data: { status: "failed" },
-      });
+          chatWrites.push(
+            prisma.chatMessage.create({
+              data: {
+                projectId: id,
+                role: "assistant",
+                content: message,
+                filesChanged: Object.keys(files),
+              },
+            })
+          );
 
-      return NextResponse.json({ error: "Generation failed" }, { status: 500 });
-    }
+          await Promise.all(chatWrites);
+
+          // 6. 완료 알림
+          controller.enqueue(
+            encoder.encode(
+              `data: ${JSON.stringify({
+                type: "complete",
+                files,
+                message,
+              })}\n\n`
+            )
+          );
+
+          controller.close();
+        } catch (error) {
+          console.error("Generation error:", error);
+
+          // Mark as failed
+          await prisma.project.update({
+            where: { id },
+            data: { status: "failed" },
+          });
+
+          controller.enqueue(
+            encoder.encode(
+              `data: ${JSON.stringify({
+                type: "error",
+                error: "Generation failed",
+              })}\n\n`
+            )
+          );
+
+          controller.close();
+        }
+      },
+    });
+
+    return new Response(stream, {
+      headers: {
+        "Content-Type": "text/event-stream",
+        "Cache-Control": "no-cache",
+        Connection: "keep-alive",
+      },
+    });
   } catch (error) {
     console.error("Error:", error);
     return NextResponse.json(

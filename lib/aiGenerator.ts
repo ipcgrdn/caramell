@@ -61,6 +61,16 @@ TECHNICAL REQUIREMENTS:
 - Include all JavaScript inline in <script> tags
 - Include all CSS in <style> tags (except Tailwind which is CDN)
 
+JAVASCRIPT SAFETY REQUIREMENTS (CRITICAL):
+- ALWAYS wrap ALL JavaScript code in document.addEventListener('DOMContentLoaded', function() {...})
+- ALWAYS check if elements exist before manipulating them (e.g., if (element) {...})
+- When using GSAP animations with numbers:
+  * Parse text content before animating: const target = parseInt(element.textContent || '0')
+  * ALWAYS validate with isFinite(): if (!isNaN(target) && isFinite(target)) {...}
+  * This prevents "non-finite value" Canvas/gradient errors
+- For event handlers in HTML (onclick, etc.), define functions OUTSIDE DOMContentLoaded
+- Use optional chaining and nullish coalescing when accessing DOM elements
+
 HTML STRUCTURE TEMPLATE:
 <!DOCTYPE html>
 <html lang="ko">
@@ -105,7 +115,14 @@ HTML STRUCTURE TEMPLATE:
   <!-- Your beautiful HTML content here -->
 
   <script>
-    // Your JavaScript code here
+    // CRITICAL: Wrap ALL JavaScript in DOMContentLoaded to prevent timing issues
+    document.addEventListener('DOMContentLoaded', function() {
+      // Your JavaScript code here
+      // IMPORTANT: Always check if elements exist before animating them
+      // IMPORTANT: When using GSAP with numbers, always validate with isFinite()
+    });
+
+    // Global functions (if needed for onclick handlers) go outside DOMContentLoaded
   </script>
 </body>
 </html>
@@ -121,11 +138,11 @@ DESIGN GUIDELINES:
 
 Return ONLY the JSON object with the complete HTML file, nothing else.`;
 
-export async function generateLandingPage(
+export async function* generateLandingPageStream(
   prompt: string
-): Promise<GenerationResult> {
+): AsyncGenerator<string, GenerationResult, unknown> {
   try {
-    const response = await anthropic.messages.create({
+    const stream = anthropic.messages.stream({
       model: "claude-haiku-4-5",
       max_tokens: 16000,
       temperature: 0.5,
@@ -133,20 +150,26 @@ export async function generateLandingPage(
       messages: [
         {
           role: "user",
-          content: `Create a beautiful HTML website for: ${prompt}`,
+          content: `${prompt}`,
         },
       ],
     });
 
-    const textBlock = response.content.find((block) => block.type === "text");
-    if (!textBlock || textBlock.type !== "text") {
-      throw new Error("No text content in Claude response");
+    let fullText = "";
+
+    for await (const chunk of stream) {
+      if (
+        chunk.type === "content_block_delta" &&
+        chunk.delta.type === "text_delta"
+      ) {
+        const text = chunk.delta.text;
+        fullText += text;
+        yield text; // 청크 전송
+      }
     }
 
-    // Clean up the response using shared utility
-    const cleanedResponse = cleanJsonResponse(textBlock.text);
+    const cleanedResponse = cleanJsonResponse(fullText);
 
-    // Parse JSON to structured result
     try {
       const parsed: unknown = JSON.parse(cleanedResponse.trim());
 
@@ -159,12 +182,10 @@ export async function generateLandingPage(
         files?: unknown;
       };
 
-      // Validate message
       if (typeof message !== "string" || !message.trim()) {
         throw new Error("Invalid response: missing or empty message");
       }
 
-      // Validate files object
       if (!files || typeof files !== "object" || Array.isArray(files)) {
         throw new Error("Invalid file structure: not an object");
       }

@@ -33,6 +33,7 @@ export default function ProjectWorkspace({ project }: { project: Project }) {
   const [chatWidth, setChatWidth] = useState(400);
   const [isResizing, setIsResizing] = useState(false);
   const [isCapturingScreenshot, setIsCapturingScreenshot] = useState(false);
+  const isGeneratingRef = useRef(false); // 중복 호출 방지
 
   // 스크린샷 캡처 함수 (백그라운드에서 캡처)
   const handleCaptureScreenshot = useCallback(async () => {
@@ -54,25 +55,66 @@ export default function ProjectWorkspace({ project }: { project: Project }) {
     }
   }, [isCapturingScreenshot, project.id]);
 
-  // Poll for status updates if generating
   useEffect(() => {
-    if (currentStatus === "generating") {
-      const interval = setInterval(async () => {
-        const response = await fetch(`/api/projects/${project.id}/status`);
-        const data = await response.json();
+    if (currentStatus === "generating" && !isGeneratingRef.current) {
+      isGeneratingRef.current = true; // 중복 호출 방지 플래그 설정
 
-        if (data.status !== "generating") {
-          setCurrentStatus(data.status);
-          router.refresh();
+      const startGeneration = async () => {
+        try {
+          const response = await fetch(`/api/projects/${project.id}/generate`, {
+            method: "POST",
+          });
 
-          // 생성이 완료되면 스크린샷 자동 캡처
-          if (data.status === "ready") {
-            setTimeout(() => handleCaptureScreenshot(), 1500);
+          if (!response.ok) {
+            throw new Error("Failed to start generation");
           }
-        }
-      }, 2000);
 
-      return () => clearInterval(interval);
+          if (!response.body) {
+            throw new Error("No response body");
+          }
+
+          const reader = response.body.getReader();
+          const decoder = new TextDecoder();
+
+          while (true) {
+            const { done, value } = await reader.read();
+            if (done) break;
+
+            const chunk = decoder.decode(value);
+            const lines = chunk.split("\n");
+
+            for (const line of lines) {
+              if (line.startsWith("data: ")) {
+                try {
+                  const data = JSON.parse(line.slice(6));
+
+                  if (data.type === "complete") {
+                    // 생성 완료
+                    setCurrentStatus("ready");
+                    router.refresh();
+
+                    // 스크린샷 자동 캡처
+                    setTimeout(() => handleCaptureScreenshot(), 3000);
+                  } else if (data.type === "error") {
+                    setCurrentStatus("failed");
+                    router.refresh();
+                  }
+                } catch (e) {
+                  // JSON 파싱 실패는 무시
+                  if (e instanceof SyntaxError) continue;
+                  throw e;
+                }
+              }
+            }
+          }
+        } catch (error) {
+          console.error("Generation error:", error);
+          setCurrentStatus("failed");
+          router.refresh();
+        }
+      };
+
+      startGeneration();
     }
   }, [currentStatus, project.id, router, handleCaptureScreenshot]);
 
@@ -160,7 +202,7 @@ export default function ProjectWorkspace({ project }: { project: Project }) {
                 setTimeout(async () => {
                   await handleCaptureScreenshot();
                   router.refresh();
-                }, 1500);
+                }, 3000);
               }}
             />
           </div>
@@ -197,7 +239,7 @@ export default function ProjectWorkspace({ project }: { project: Project }) {
                   setTimeout(async () => {
                     await handleCaptureScreenshot();
                     router.refresh();
-                  }, 1500);
+                  }, 3000);
                 }}
               />
             </div>

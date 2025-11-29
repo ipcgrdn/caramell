@@ -19,7 +19,7 @@ export async function POST(req: Request) {
       );
     }
 
-    // Find or create user in database
+    // Find user in database
     const user = await prisma.user.findUnique({
       where: { clerkId: userId },
     });
@@ -28,26 +28,13 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "User not found" }, { status: 404 });
     }
 
-    // Create project
+    // Create project (status: generating)
     const project = await prisma.project.create({
       data: {
         userId: user.id,
         prompt: prompt.trim(),
         status: "generating",
       },
-    });
-
-    // Trigger code generation in background (don't await)
-    fetch(
-      `${process.env.NEXT_PUBLIC_APP_URL}/api/projects/${project.id}/generate`,
-      {
-        method: "POST",
-        headers: {
-          Cookie: req.headers.get("cookie") || "",
-        },
-      }
-    ).catch((error) => {
-      console.error("Failed to trigger generation:", error);
     });
 
     return NextResponse.json({
