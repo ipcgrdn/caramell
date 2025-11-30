@@ -5,7 +5,11 @@ import {
   ChatMessage,
   ChatResponse,
 } from "../aiTypes";
-import { cleanJsonResponse, SYSTEM_PROMPT, CHAT_SYSTEM_PROMPT } from "../aiPrompts";
+import {
+  cleanJsonResponse,
+  SYSTEM_PROMPT,
+  CHAT_SYSTEM_PROMPT,
+} from "../aiPrompts";
 
 // Gemini 클라이언트 초기화
 const genAI = new GoogleGenerativeAI(process.env.GOOGLE_API_KEY!);
@@ -33,7 +37,11 @@ export async function* generateWithGemini(
         },
         {
           role: "model",
-          parts: [{ text: "I understand. I will generate beautiful, modern websites following these exact specifications and return only valid JSON with the structure you specified." }],
+          parts: [
+            {
+              text: "yes",
+            },
+          ],
         },
       ],
     });
@@ -120,14 +128,21 @@ ${JSON.stringify(currentFiles, null, 2)}`;
     });
 
     // 채팅 히스토리 구성
-    const history: Array<{ role: "user" | "model"; parts: Array<{ text: string }> }> = [
+    const history: Array<{
+      role: "user" | "model";
+      parts: Array<{ text: string }>;
+    }> = [
       {
         role: "user",
         parts: [{ text: systemPrompt }],
       },
       {
         role: "model",
-        parts: [{ text: "I understand. I will help you modify your website following these rules and return only valid JSON." }],
+        parts: [
+          {
+            text: "Yes",
+          },
+        ],
       },
     ];
 

@@ -5,7 +5,11 @@ import {
   ChatMessage,
   ChatResponse,
 } from "../aiTypes";
-import { cleanJsonResponse, SYSTEM_PROMPT, CHAT_SYSTEM_PROMPT } from "../aiPrompts";
+import {
+  cleanJsonResponse,
+  SYSTEM_PROMPT,
+  CHAT_SYSTEM_PROMPT,
+} from "../aiPrompts";
 
 // Anthropic 클라이언트 초기화
 export const anthropic = new Anthropic({
@@ -23,7 +27,13 @@ export async function* generateWithClaude(
       model: "claude-haiku-4-5",
       max_tokens: 16000,
       temperature: 0.7,
-      system: SYSTEM_PROMPT,
+      system: [
+        {
+          type: "text",
+          text: SYSTEM_PROMPT,
+          cache_control: { type: "ephemeral" },
+        },
+      ],
       messages: [
         {
           role: "user",
