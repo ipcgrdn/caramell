@@ -1,33 +1,35 @@
 export const DESIGN_SYSTEMS = `
-# COLOR SYSTEMS
-
-- Never overuse gradients or strong colors.
-
-# TYPOGRAPHY SYSTEMS
-
-- Use Maximum 2 Font Families
-
-## Font Trends
-
-<trending_fonts>
-Current popular fonts:
-- **Instrument Serif**: Modern serif, Gen Z favorite
+<TYPOGRAPHY SYSTEMS>
+Trending Fonts
 - **Playfair Display**: Elegant, editorial serif
-- **Fraunces**: Variable serif, unique character
-- **Inter**: Clean, professional sans-serif (still dominant)
-- **Space Grotesk**: Geometric sans with personality
-</trending_fonts>
-
-## Italic Emphasis Trend
-
-<trend>
+- **Instrument Serif**: Modern serif, Gen Z favorite
+- **Roboto**: Clean, modern sans-serif
+- **Montserrat**: Clean, modern sans-serif
+Italic Emphasis Trend
 Mix italic words within sentences for emphasis:
-
-<example>
+\`\`\`html
 <h1 class="text-7xl font-serif">
   Design <em class="italic">faster</em> and smarter
 </h1>
-</example>
+\`\`\`
+</TYPOGRAPHY SYSTEMS>
 
-</trend>
+<COLOR SYSTEMS>
+- Never use gradients
+- Use Solid Colors or black or white.
+- Maintain the design language of the Hero section throughout the entire page.
+</COLOR SYSTEMS>
+
+<ICON SYSTEMS>
+- Never use icon libraries (Lucide, etc.)
+- Never use emoji icons
+- Never create LOGO
+- Use custom SVG icons instead
+</ICON SYSTEMS>
+
+<COPYRIGHT SYSTEMS>
+- Use intuitive and compelling language in the description field that users can understand.
+- Avoid abstract explanations.
+- Use marketing language that aligns with the website's purpose.
+</COPYRIGHT SYSTEMS>
 `;

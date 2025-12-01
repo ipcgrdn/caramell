@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Geist, Playfair_Display, Inter } from "next/font/google";
+import { Geist, Playfair_Display } from "next/font/google";
 import { ClerkProvider } from "@clerk/nextjs";
 import "./globals.css";
 
@@ -13,11 +13,6 @@ const playfair = Playfair_Display({
   subsets: ["latin"],
   style: ["normal", "italic"],
   weight: ["400", "500", "600", "700", "800", "900"],
-});
-
-const inter = Inter({
-  variable: "--font-inter",
-  subsets: ["latin"],
 });
 
 export const metadata: Metadata = {
@@ -49,18 +44,21 @@ export default function RootLayout({
           card: "bg-[#1a1a1a] backdrop-blur-xl border border-white/10 shadow-2xl px-6 py-6",
 
           // Header - Aura 스타일, 간격 조정
-          headerTitle: "!text-white font-inter text-[1.75rem] font-semibold tracking-tight",
+          headerTitle:
+            "!text-white font-inter text-[1.75rem] font-semibold tracking-tight",
           headerSubtitle: "!text-white/70 text-[0.9375rem] font-normal",
 
           // Social buttons - 명확한 흰색 배경, 높이 줄이기
           socialButtonsBlockButton:
             "!bg-white/10 !border-white/20 !text-white hover:!bg-white/15 !transition-all !duration-200 !h-10 !font-medium",
-          socialButtonsBlockButtonText: "!text-white !font-medium !text-[0.9375rem]",
+          socialButtonsBlockButtonText:
+            "!text-white !font-medium !text-[0.9375rem]",
           socialButtonsProviderIcon: "!brightness-0 !invert",
 
           // Divider - 더 미묘하게
           dividerLine: "!bg-white/10",
-          dividerText: "!text-white/50 !text-sm !font-normal !uppercase !tracking-wider",
+          dividerText:
+            "!text-white/50 !text-sm !font-normal !uppercase !tracking-wider",
 
           // Tabs - Sign In / Sign Up
           alternativeMethodsBlockButton:
@@ -85,7 +83,8 @@ export default function RootLayout({
 
           // Links
           formFieldLabelRow: "!mb-0",
-          formFieldAction: "!text-white/60 hover:!text-white !text-sm !font-normal",
+          formFieldAction:
+            "!text-white/60 hover:!text-white !text-sm !font-normal",
 
           // Modal
           modalBackdrop: "!backdrop-blur-md",
@@ -109,7 +108,7 @@ export default function RootLayout({
     >
       <html lang="en">
         <body
-          className={`${geistSans.variable} ${playfair.variable} ${inter.variable} antialiased`}
+          className={`${geistSans.variable} ${playfair.variable} antialiased`}
         >
           {children}
         </body>

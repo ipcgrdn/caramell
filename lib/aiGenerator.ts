@@ -15,19 +15,32 @@ export async function* generateLandingPageStream(
   prompt: string,
   model: AIModel = "claude"
 ): AsyncGenerator<string, GenerationResult, unknown> {
-  switch (model) {
-    case "claude":
-      yield* generateWithClaude(prompt);
-      break;
-    case "chatgpt":
-      yield* generateWithOpenAI(prompt);
-      break;
-    case "gemini":
-      yield* generateWithGemini(prompt);
-      break;
-    default:
-      throw new Error(`Unsupported AI model: ${model}`);
-  }
+  const generator = (() => {
+    switch (model) {
+      case "claude":
+        return generateWithClaude(prompt);
+      case "chatgpt":
+        return generateWithOpenAI(prompt);
+      case "gemini":
+        return generateWithGemini(prompt);
+      default:
+        throw new Error(`Unsupported AI model: ${model}`);
+    }
+  })();
 
-  return { files: {}, message: "" };
+// 아래의 console.log는 추후 제거 예정
+
+  let finalResult: GenerationResult = { files: {}, message: "" };
+
+  while (true) {
+    const { value, done } = await generator.next();
+
+    if (done) {
+      finalResult = value ?? finalResult;
+      console.log(`[AI:${model}] final response`, finalResult);
+      return finalResult;
+    }
+
+    yield value;
+  }
 }
