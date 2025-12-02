@@ -7,8 +7,8 @@ export default function HeroSection() {
     <div className="w-full min-h-screen relative overflow-hidden pt-32 pb-20">
       <MeshGradient
         className="w-full h-full absolute inset-0"
-        colors={["#000000", "#1a1a1a", "#333333", "#D4A574", "#C68E52"]}
-        speed={1.0}
+        colors={["#000000", "#1a1a1a", "#D4A574", "#C68E52"]}
+        speed={0.5}
       />
 
       {/* Content */}

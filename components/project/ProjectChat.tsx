@@ -10,6 +10,10 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
+import rehypeHighlight from "rehype-highlight";
+import "highlight.js/styles/github-dark.css";
 
 interface ProjectChatProps {
   projectId: string;
@@ -93,10 +97,7 @@ export default function ProjectChat({
 
       // If files were updated, refresh the parent
       if (data.filesUpdated && onFilesUpdate) {
-        // Small delay to ensure DB is updated
-        setTimeout(() => {
-          onFilesUpdate();
-        }, 500);
+        onFilesUpdate();
       }
     } catch (error) {
       console.error("Chat error:", error);
@@ -122,10 +123,7 @@ export default function ProjectChat({
   };
 
   return (
-    <div className="h-full flex flex-col relative">
-      {/* Liquid Glass Container */}
-      <div className="absolute inset-0 backdrop-blur-xl bg-linear-to-br from-white/8 via-white/5 to-white/2 rounded-3xl border border-white/10 pointer-events-none" />
-
+    <div className="h-full flex flex-col border-l border-white/20">
       {/* Messages */}
       <div className="flex-1 overflow-auto p-6 pb-32 space-y-4 relative z-10">
         {/* Conversation Messages */}
@@ -134,7 +132,7 @@ export default function ProjectChat({
             {message.role === "user" ? (
               <>
                 <div className="flex justify-end">
-                  <div className="bg-white/10 backdrop-blur-sm text-white rounded-lg px-4 py-1 max-w-[85%] border border-white/10">
+                  <div className="bg-white/10 backdrop-blur-sm text-white rounded-lg px-4 py-2 max-w-[85%]">
                     <p className="text-sm leading-relaxed">{message.content}</p>
                   </div>
                 </div>
@@ -163,10 +161,81 @@ export default function ProjectChat({
               </>
             ) : (
               <>
-                <div className="backdrop-blur-sm text-white px-4 py-1">
-                  <p className="text-sm leading-relaxed whitespace-pre-wrap">
-                    {message.content}
-                  </p>
+                <div className="backdrop-blur-sm text-white px-4 py-2">
+                  <div className="text-sm leading-relaxed prose prose-invert prose-sm max-w-none">
+                    <ReactMarkdown
+                      remarkPlugins={[remarkGfm]}
+                      rehypePlugins={[rehypeHighlight]}
+                      components={{
+                        code: ({ node, className, children, ...props }) => {
+                          const match = /language-(\w+)/.exec(className || "");
+                          const isInline = !match;
+                          return isInline ? (
+                            <code
+                              className="bg-white/10 px-1.5 py-0.5 rounded text-xs"
+                              {...props}
+                            >
+                              {children}
+                            </code>
+                          ) : (
+                            <code className={className} {...props}>
+                              {children}
+                            </code>
+                          );
+                        },
+                        pre: ({ children }) => (
+                          <pre className="bg-black/30 border border-white/10 rounded-lg p-3 overflow-x-auto">
+                            {children}
+                          </pre>
+                        ),
+                        p: ({ children }) => (
+                          <p className="mb-2 last:mb-0">{children}</p>
+                        ),
+                        ul: ({ children }) => (
+                          <ul className="list-disc list-inside mb-2 space-y-1">
+                            {children}
+                          </ul>
+                        ),
+                        ol: ({ children }) => (
+                          <ol className="list-decimal list-inside mb-2 space-y-1">
+                            {children}
+                          </ol>
+                        ),
+                        h1: ({ children }) => (
+                          <h1 className="text-lg font-bold mb-2 mt-3">
+                            {children}
+                          </h1>
+                        ),
+                        h2: ({ children }) => (
+                          <h2 className="text-base font-bold mb-2 mt-3">
+                            {children}
+                          </h2>
+                        ),
+                        h3: ({ children }) => (
+                          <h3 className="text-sm font-bold mb-2 mt-2">
+                            {children}
+                          </h3>
+                        ),
+                        blockquote: ({ children }) => (
+                          <blockquote className="border-l-4 border-white/30 pl-4 italic my-2">
+                            {children}
+                          </blockquote>
+                        ),
+                        a: ({ children, href }) => (
+                          <a
+                            href={href}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-blue-400 hover:text-blue-300 underline"
+                          >
+                            {children}
+                          </a>
+                        ),
+                      }}
+                    >
+                      {message.content}
+                    </ReactMarkdown>
+                  </div>
                 </div>
                 {/* Copy Button */}
                 <div className="flex items-center justify-end">
@@ -198,18 +267,15 @@ export default function ProjectChat({
         {/* Loading State */}
         {isLoading && (
           <div className="flex items-center pl-4">
-            <MorphingSquare className="w-4 h-4 bg-[#D4A574]" />
+            <MorphingSquare className="w-4 h-4" />
           </div>
         )}
       </div>
 
       {/* Floating Input */}
       <div className="absolute bottom-0 left-0 right-0 p-4 z-20">
-        {/* Dark Gradient Backdrop */}
-        <div className="absolute inset-0 bg-linear-to-t from-black/60 via-black/30 to-transparent pointer-events-none" />
-
         <form onSubmit={handleSubmit} className="relative z-10">
-          <div className="relative bg-white/10 border border-white/20 rounded-lg overflow-hidden">
+          <div className="relative bg-white/10 border border-white/10 rounded-2xl overflow-hidden">
             {/* Two-layer structure */}
             <div className="relative">
               {/* Top Layer - Input */}
@@ -220,7 +286,7 @@ export default function ProjectChat({
                   onChange={(e) => setInput(e.target.value)}
                   onKeyDown={handleKeyDown}
                   placeholder="Ask for revisions..."
-                  className="w-full bg-transparent border-0 outline-none text-sm text-white placeholder:text-white/30 resize-none min-h-[32px] max-h-[200px]"
+                  className="w-full bg-transparent border-0 outline-none text-sm text-white placeholder:text-white/40 resize-none min-h-[32px] max-h-[200px]"
                   disabled={isLoading}
                   rows={1}
                   style={{
@@ -263,7 +329,7 @@ export default function ProjectChat({
                           {AI_MODELS.find((m) => m.id === selectedModel)?.name}
                         </span>
                         <svg
-                          className="w-3 h-3 ml-1"
+                          className="w-3 h-3"
                           fill="none"
                           stroke="currentColor"
                           viewBox="0 0 24 24"
@@ -303,7 +369,7 @@ export default function ProjectChat({
                 <button
                   type="submit"
                   disabled={isLoading || !input.trim()}
-                  className="shrink-0 w-5 h-5 rounded-full bg-linear-to-br from-[#D4A574] to-[#C68E52] hover:from-[#C68E52] hover:to-[#B57D41] disabled:opacity-40 disabled:cursor-not-allowed text-black transition-all shadow-lg hover:shadow-xl hover:scale-105 flex items-center justify-center"
+                  className="shrink-0 w-5 h-5 p-1 rounded-full hover:bg-white/10 disabled:opacity-50 disabled:cursor-not-allowed text-white flex items-center justify-center"
                   aria-label="Send message"
                 >
                   <svg

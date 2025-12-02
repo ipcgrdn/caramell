@@ -1,11 +1,11 @@
 "use client";
 
-import { useState, useEffect, useRef, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { useRouter } from "next/navigation";
 
 import ProjectNav from "./ProjectNav";
 import ProjectCode from "./ProjectCode";
-import ProjectScreen, { ProjectScreenRef } from "./ProjectScreen";
+import ProjectScreen from "./ProjectScreen";
 import ProjectChat from "./ProjectChat";
 
 import { MorphingSquare } from "../ui/morphing-square";
@@ -23,31 +23,42 @@ interface Project {
 
 export default function ProjectWorkspace({ project }: { project: Project }) {
   const router = useRouter();
-  const projectScreenRef = useRef<ProjectScreenRef>(null);
   const [currentStatus, setCurrentStatus] = useState(project.status);
+
+  const getStorageKey = (key: string) => `project_${project.id}_${key}`;
+
   const [currentView, setCurrentView] = useState<"code" | "preview">("preview");
   const [viewportSize, setViewportSize] = useState<
     "desktop" | "tablet" | "mobile"
   >("desktop");
   const [isChatOpen, setIsChatOpen] = useState(true);
   const [chatWidth, setChatWidth] = useState(400);
+
+  useEffect(() => {
+    const savedView = localStorage.getItem(getStorageKey("currentView"));
+    if (savedView) setCurrentView(savedView as "code" | "preview");
+
+    const savedViewport = localStorage.getItem(getStorageKey("viewportSize"));
+    if (savedViewport)
+      setViewportSize(savedViewport as "desktop" | "tablet" | "mobile");
+
+    const savedChat = localStorage.getItem(getStorageKey("isChatOpen"));
+    if (savedChat !== null) setIsChatOpen(savedChat === "true");
+
+    const savedWidth = localStorage.getItem(getStorageKey("chatWidth"));
+    if (savedWidth) setChatWidth(parseInt(savedWidth, 10));
+  }, [project.id]);
+
   const [isResizing, setIsResizing] = useState(false);
   const [isCapturingScreenshot, setIsCapturingScreenshot] = useState(false);
-  const isGeneratingRef = useRef(false); // 중복 호출 방지
+  const isGeneratingRef = useRef(false);
 
-  // 스크린샷 캡처 함수 (백그라운드에서 캡처)
   const handleCaptureScreenshot = useCallback(async () => {
     if (isCapturingScreenshot) return;
 
-    const iframe = projectScreenRef.current?.getIframeElement();
-    if (!iframe) {
-      console.warn("Preview iframe not ready yet, will retry...");
-      return;
-    }
-
     setIsCapturingScreenshot(true);
     try {
-      await captureAndUploadScreenshot(iframe, project.id);
+      await captureAndUploadScreenshot(project.id);
     } catch (error) {
       console.error("Failed to capture screenshot:", error);
     } finally {
@@ -56,8 +67,24 @@ export default function ProjectWorkspace({ project }: { project: Project }) {
   }, [isCapturingScreenshot, project.id]);
 
   useEffect(() => {
+    localStorage.setItem(getStorageKey("currentView"), currentView);
+  }, [currentView, project.id]);
+
+  useEffect(() => {
+    localStorage.setItem(getStorageKey("viewportSize"), viewportSize);
+  }, [viewportSize, project.id]);
+
+  useEffect(() => {
+    localStorage.setItem(getStorageKey("isChatOpen"), String(isChatOpen));
+  }, [isChatOpen, project.id]);
+
+  useEffect(() => {
+    localStorage.setItem(getStorageKey("chatWidth"), String(chatWidth));
+  }, [chatWidth, project.id]);
+
+  useEffect(() => {
     if (currentStatus === "generating" && !isGeneratingRef.current) {
-      isGeneratingRef.current = true; // 중복 호출 방지 플래그 설정
+      isGeneratingRef.current = true;
 
       const startGeneration = async () => {
         try {
@@ -89,18 +116,15 @@ export default function ProjectWorkspace({ project }: { project: Project }) {
                   const data = JSON.parse(line.slice(6));
 
                   if (data.type === "complete") {
-                    // 생성 완료
                     setCurrentStatus("ready");
                     router.refresh();
 
-                    // 스크린샷 자동 캡처
-                    setTimeout(() => handleCaptureScreenshot(), 3000);
+                    setTimeout(() => handleCaptureScreenshot(), 1000);
                   } else if (data.type === "error") {
                     setCurrentStatus("failed");
                     router.refresh();
                   }
                 } catch (e) {
-                  // JSON 파싱 실패는 무시
                   if (e instanceof SyntaxError) continue;
                   throw e;
                 }
@@ -118,7 +142,6 @@ export default function ProjectWorkspace({ project }: { project: Project }) {
     }
   }, [currentStatus, project.id, router, handleCaptureScreenshot]);
 
-  // Handle chat resize
   const handleResizeStart = () => {
     setIsResizing(true);
 
@@ -139,7 +162,6 @@ export default function ProjectWorkspace({ project }: { project: Project }) {
     document.addEventListener("mouseup", handleMouseUp);
   };
 
-  // Generating state
   if (currentStatus === "generating") {
     return (
       <div className="min-h-screen bg-black flex items-center justify-center">
@@ -150,7 +172,6 @@ export default function ProjectWorkspace({ project }: { project: Project }) {
     );
   }
 
-  // Failed state
   if (currentStatus === "failed") {
     return (
       <div className="min-h-screen bg-black flex items-center justify-center">
@@ -172,12 +193,10 @@ export default function ProjectWorkspace({ project }: { project: Project }) {
     );
   }
 
-  // Ready state - IDE layout
   return (
     <div className="h-screen flex flex-col bg-black">
       {/* Nav */}
       <ProjectNav
-        projectName={project.name}
         currentView={currentView}
         onViewChange={setCurrentView}
         viewportSize={viewportSize}
@@ -198,22 +217,12 @@ export default function ProjectWorkspace({ project }: { project: Project }) {
             <ProjectCode
               files={project.files}
               projectId={project.id}
-              onFilesUpdate={() => {
-                setTimeout(async () => {
-                  await handleCaptureScreenshot();
-                  router.refresh();
-                }, 3000);
-              }}
             />
           </div>
 
           {/* Preview 뷰 - 항상 렌더링 (Code 뷰일 때는 숨김) */}
           <div className={currentView === "preview" ? "h-full" : "hidden"}>
-            <ProjectScreen
-              ref={projectScreenRef}
-              files={project.files}
-              viewportSize={viewportSize}
-            />
+            <ProjectScreen files={project.files} viewportSize={viewportSize} />
           </div>
         </div>
 
@@ -239,7 +248,7 @@ export default function ProjectWorkspace({ project }: { project: Project }) {
                   setTimeout(async () => {
                     await handleCaptureScreenshot();
                     router.refresh();
-                  }, 3000);
+                  }, 1000);
                 }}
               />
             </div>

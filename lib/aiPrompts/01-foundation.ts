@@ -28,6 +28,7 @@ Structure:
 <constraints>
 - Single, complete HTML file (everything inline)
 - External images only (Unsplash, Lummi.ai, Pixabay)
+- Always design for mobile first
 </constraints>
 </Technology Stack>
 

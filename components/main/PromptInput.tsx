@@ -12,11 +12,14 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import PromptEnhancerModal from "./PromptEnhancer";
 
 export default function PromptInput() {
   const [prompt, setPrompt] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [selectedModel, setSelectedModel] = useState<AIModel>("claude");
+  const [isEnhancerOpen, setIsEnhancerOpen] = useState(false);
+  const [designStyle, setDesignStyle] = useState<string>("");
   const router = useRouter();
   const { isSignedIn } = useUser();
   const textareaRef = useRef<HTMLTextAreaElement>(null);
@@ -68,6 +71,15 @@ export default function PromptInput() {
     }
   };
 
+  const handleApplyStyle = (style: string) => {
+    setDesignStyle(style);
+    if (prompt && !prompt.includes(style)) {
+      setPrompt((prev) => `${prev}\n\n${style}`);
+    } else if (!prompt) {
+      setPrompt(style);
+    }
+  };
+
   const selectedModelConfig = AI_MODELS.find((m) => m.id === selectedModel);
 
   return (
@@ -90,11 +102,11 @@ export default function PromptInput() {
       </div>
 
       <div className="mt-1 flex items-center justify-between">
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-1">
           {/* Attach Button */}
           <button
             disabled={isLoading}
-            className="p-2 hover:bg-white/10 rounded-full transition-colors disabled:opacity-50"
+            className="p-1 hover:bg-white/10 rounded-full transition-colors disabled:opacity-50"
           >
             <svg
               className="w-4 h-4 text-white"
@@ -116,12 +128,12 @@ export default function PromptInput() {
             <DropdownMenuTrigger asChild>
               <button
                 disabled={isLoading}
-                className="flex items-center gap-2 px-2 py-1 rounded-lg transition-colors text-white text-xs font-medium disabled:opacity-50 border border-white/10 focus:outline-none"
+                className="flex items-center gap-1 px-2 py-1 rounded-lg transition-colors text-white text-xs font-medium disabled:opacity-50 border border-white/10 focus:outline-none"
               >
                 {ModelIcons[selectedModel]}
                 <span>{selectedModelConfig?.name}</span>
                 <svg
-                  className="w-3 h-3 ml-1"
+                  className="w-3 h-3"
                   fill="none"
                   stroke="currentColor"
                   viewBox="0 0 24 24"
@@ -155,13 +167,35 @@ export default function PromptInput() {
               ))}
             </DropdownMenuContent>
           </DropdownMenu>
+
+          {/* Prompt Enhancer Button */}
+          <button
+            onClick={() => setIsEnhancerOpen(true)}
+            disabled={isLoading}
+            className="flex items-center gap-1 px-2 py-1 rounded-lg transition-colors text-white text-xs font-medium disabled:opacity-50 border border-white/10 hover:bg-white/10"
+          >
+            <svg
+              className="w-3.5 h-3.5"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zm0 0h12a2 2 0 002-2v-4a2 2 0 00-2-2h-2.343M11 7.343l1.657-1.657a2 2 0 012.828 0l2.829 2.829a2 2 0 010 2.828l-8.486 8.485M7 17h.01"
+              />
+            </svg>
+            <span>Enhancer</span>
+          </button>
         </div>
 
         {/* Submit Button */}
         <button
           onClick={handleSubmit}
           disabled={isLoading || !prompt.trim()}
-          className="p-2 bg-black hover:bg-[#C68E52] text-white rounded-full transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+          className="p-2 hover:bg-white/10 text-white rounded-full transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
         >
           {isLoading ? (
             <svg
@@ -200,6 +234,14 @@ export default function PromptInput() {
           )}
         </button>
       </div>
+
+      {/* Prompt Enhancer Modal */}
+      <PromptEnhancerModal
+        isOpen={isEnhancerOpen}
+        onClose={() => setIsEnhancerOpen(false)}
+        onApply={handleApplyStyle}
+        currentStyle={designStyle}
+      />
     </div>
   );
 }

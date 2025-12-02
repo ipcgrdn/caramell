@@ -4,6 +4,7 @@ export const COMPONENTS = `
 - Transparent background initially
 - Visible text color (high contrast)
 - Add background color when scrolled
+- Doesn't have to take full width - floating navbar design is also effective
 </NAVBAR GUIDELINES>
 
 <HERO GUIDELINES>
@@ -23,6 +24,7 @@ Background Options (choose one):
 - Include images
 - Never use icons
 - Use custom SVG icons if icons are necessary
+- Use color harmony from Hero section (complementary, analogous, or triadic colors)
 </FEATURE GUIDELINES>
 
 <FOOTER GUIDELINES>

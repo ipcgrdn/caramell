@@ -5,7 +5,6 @@ import { useRouter } from "next/navigation";
 type ViewportSize = "desktop" | "tablet" | "mobile";
 
 interface ProjectNavProps {
-  projectName: string | null;
   currentView: "code" | "preview";
   onViewChange: (view: "code" | "preview") => void;
   viewportSize?: ViewportSize;
@@ -15,7 +14,6 @@ interface ProjectNavProps {
 }
 
 export default function ProjectNav({
-  projectName,
   currentView,
   onViewChange,
   viewportSize = "desktop",
@@ -26,9 +24,9 @@ export default function ProjectNav({
   const router = useRouter();
 
   return (
-    <nav className="h-10 bg-[#0A0A0A] flex items-center justify-between px-4">
+    <nav className="h-10 flex items-center justify-between px-4 border-b border-white/20">
       {/* Left: Back button + Project name */}
-      <div className="flex items-center justify-center gap-1">
+      <div className="flex items-center justify-center">
         <button
           onClick={() => router.push("/")}
           className="p-1.5 rounded-lg text-white/60 hover:text-white hover:bg-white/5 transition-all"
@@ -48,9 +46,6 @@ export default function ProjectNav({
             />
           </svg>
         </button>
-        <h1 className="text-white font-instrument text-xs">
-          {projectName || "Untitled"}
-        </h1>
       </div>
 
       {/* Center: View toggle and Viewport controls */}
@@ -111,124 +106,131 @@ export default function ProjectNav({
           </button>
         </div>
 
-        {/* Viewport controls - only show in preview mode */}
-        {currentView === "preview" && onViewportChange && (
-          <div className="flex items-center gap-1 bg-white/5 rounded-lg p-1">
-            <button
-              onClick={() => onViewportChange("desktop")}
-              className={`p-1.5 rounded-md transition-all ${
-                viewportSize === "desktop"
+        {/* Viewport controls - disabled when not in preview mode */}
+        <div className="flex items-center gap-1 bg-white/5 rounded-lg p-1">
+          <button
+            onClick={() => onViewportChange?.("desktop")}
+            disabled={currentView !== "preview" || !onViewportChange}
+            className={`p-1.5 rounded-md transition-all ${
+              currentView !== "preview" || !onViewportChange
+                ? "text-white/60 cursor-not-allowed"
+                : viewportSize === "desktop"
                   ? "bg-white/10 text-white"
                   : "text-white/60 hover:text-white"
-              }`}
-              aria-label="Desktop view"
+            }`}
+            aria-label="Desktop view"
+          >
+            <svg
+              className="w-4 h-4"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
             >
-              <svg
-                className="w-4 h-4"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <rect
-                  x="2"
-                  y="3"
-                  width="20"
-                  height="14"
-                  rx="2"
-                  strokeWidth={2}
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                />
-                <line
-                  x1="8"
-                  y1="21"
-                  x2="16"
-                  y2="21"
-                  strokeWidth={2}
-                  strokeLinecap="round"
-                />
-                <line
-                  x1="12"
-                  y1="17"
-                  x2="12"
-                  y2="21"
-                  strokeWidth={2}
-                  strokeLinecap="round"
-                />
-              </svg>
-            </button>
-            <button
-              onClick={() => onViewportChange("tablet")}
-              className={`p-1.5 rounded-md transition-all ${
-                viewportSize === "tablet"
+              <rect
+                x="2"
+                y="3"
+                width="20"
+                height="14"
+                rx="2"
+                strokeWidth={2}
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
+              <line
+                x1="8"
+                y1="21"
+                x2="16"
+                y2="21"
+                strokeWidth={2}
+                strokeLinecap="round"
+              />
+              <line
+                x1="12"
+                y1="17"
+                x2="12"
+                y2="21"
+                strokeWidth={2}
+                strokeLinecap="round"
+              />
+            </svg>
+          </button>
+          <button
+            onClick={() => onViewportChange?.("tablet")}
+            disabled={currentView !== "preview" || !onViewportChange}
+            className={`p-1.5 rounded-md transition-all ${
+              currentView !== "preview" || !onViewportChange
+                ? "text-white/60 cursor-not-allowed"
+                : viewportSize === "tablet"
                   ? "bg-white/10 text-white"
                   : "text-white/60 hover:text-white"
-              }`}
-              aria-label="Tablet view"
+            }`}
+            aria-label="Tablet view"
+          >
+            <svg
+              className="w-4 h-4"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
             >
-              <svg
-                className="w-4 h-4"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <rect
-                  x="5"
-                  y="2"
-                  width="14"
-                  height="20"
-                  rx="2"
-                  strokeWidth={2}
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                />
-                <line
-                  x1="12"
-                  y1="18"
-                  x2="12"
-                  y2="18"
-                  strokeWidth={2}
-                  strokeLinecap="round"
-                />
-              </svg>
-            </button>
-            <button
-              onClick={() => onViewportChange("mobile")}
-              className={`p-1.5 rounded-md transition-all ${
-                viewportSize === "mobile"
+              <rect
+                x="5"
+                y="2"
+                width="14"
+                height="20"
+                rx="2"
+                strokeWidth={2}
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
+              <line
+                x1="12"
+                y1="18"
+                x2="12"
+                y2="18"
+                strokeWidth={2}
+                strokeLinecap="round"
+              />
+            </svg>
+          </button>
+          <button
+            onClick={() => onViewportChange?.("mobile")}
+            disabled={currentView !== "preview" || !onViewportChange}
+            className={`p-1.5 rounded-md transition-all ${
+              currentView !== "preview" || !onViewportChange
+                ? "text-white/60 cursor-not-allowed"
+                : viewportSize === "mobile"
                   ? "bg-white/10 text-white"
                   : "text-white/60 hover:text-white"
-              }`}
-              aria-label="Mobile view"
+            }`}
+            aria-label="Mobile view"
+          >
+            <svg
+              className="w-4 h-4"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
             >
-              <svg
-                className="w-4 h-4"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <rect
-                  x="7"
-                  y="2"
-                  width="10"
-                  height="20"
-                  rx="2"
-                  strokeWidth={2}
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                />
-                <line
-                  x1="12"
-                  y1="18"
-                  x2="12"
-                  y2="18"
-                  strokeWidth={2}
-                  strokeLinecap="round"
-                />
-              </svg>
-            </button>
-          </div>
-        )}
+              <rect
+                x="7"
+                y="2"
+                width="10"
+                height="20"
+                rx="2"
+                strokeWidth={2}
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
+              <line
+                x1="12"
+                y1="18"
+                x2="12"
+                y2="18"
+                strokeWidth={2}
+                strokeLinecap="round"
+              />
+            </svg>
+          </button>
+        </div>
       </div>
 
       {/* Right: Actions */}
@@ -249,7 +251,7 @@ export default function ProjectNav({
           </svg>
           Upgrade
         </button>
-        <button className="px-2 py-1 bg-[#D4A574] hover:bg-[#C68E52] text-black text-xs rounded-lg transition-colors flex items-center gap-1.5">
+        <button className="px-2 py-1 bg-white hover:bg-[#D4A574] text-black text-xs rounded-lg transition-colors flex items-center gap-1.5">
           <svg
             className="w-3 h-3"
             fill="none"

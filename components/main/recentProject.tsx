@@ -55,10 +55,12 @@ export default function RecentProject() {
   }
 
   return (
-    <div className="w-full bg-white">
+    <div className="w-full">
       <div className="max-w-8xl mx-auto px-8">
-        <div className="bg-white rounded-4xl p-10 relative z-20 shadow-xl">
-          <h2 className="text-2xl md:text-4xl font-playfair text-black mb-8">Recent</h2>
+        <div className="bg-black/50 rounded-4xl p-10 relative z-20 shadow-xl">
+          <h2 className="text-2xl md:text-4xl font-playfair text-white mb-8">
+            Recent
+          </h2>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
             {projects.map((project) => (
@@ -67,9 +69,9 @@ export default function RecentProject() {
                 href={`/project/${project.id}`}
                 className="group"
               >
-                <div className="bg-black/5 hover:bg-black/10 rounded-2xl overflow-hidden">
+                <div className="bg-white/10 hover:bg-white/20 rounded-2xl overflow-hidden">
                   {/* Project Thumbnail */}
-                  <div className="aspect-video relative overflow-hidden bg-gray-100">
+                  <div className="aspect-video relative overflow-hidden">
                     {getProjectThumbnail(project) ? (
                       <Image
                         src={getProjectThumbnail(project)!}
@@ -99,10 +101,10 @@ export default function RecentProject() {
 
                   {/* Project Info */}
                   <div className="p-4">
-                    <h3 className="text-black font-medium text-sm mb-2 line-clamp-1">
+                    <h3 className="text-white font-medium text-sm mb-2 line-clamp-1">
                       {project.name || "Untitled"}
                     </h3>
-                    <p className="text-gray-600 text-xs">
+                    <p className="text-white/60 text-xs">
                       {new Date(project.createdAt).toLocaleDateString()}
                     </p>
                   </div>

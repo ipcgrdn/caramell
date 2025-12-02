@@ -305,5 +305,4 @@ pinTl.from(".card", {
 });
 </script>
 \`\`\`
-
 </GSAP ANIMATION PATTERNS>`;
