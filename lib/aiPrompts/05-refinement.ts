@@ -26,7 +26,8 @@ You will receive three critical inputs:
 
 <RESPONSE FORMAT>
 <rule priority="critical">
-Return ONLY a valid JSON object. No explanations, no markdown, no code blocks.
+Return ONLY a valid JSON object that passes JSON.parse(). No explanations, no markdown, no code blocks.
+The HTML in fileChanges must be a properly escaped JSON string.
 Format the "response" field content using Markdown syntax (headings, lists, code blocks, bold, etc.) for better readability.
 </rule>
 

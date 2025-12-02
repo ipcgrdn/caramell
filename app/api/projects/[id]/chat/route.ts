@@ -176,6 +176,7 @@ export async function POST(
         response: result.response,
         filesUpdated: filesChanged.length > 0,
         filesChanged,
+        updatedFiles: updatedFiles,
       });
     } catch (error) {
       console.error("Chat AI error:", error);

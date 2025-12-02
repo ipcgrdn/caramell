@@ -6,12 +6,13 @@ import Editor from "@monaco-editor/react";
 interface ProjectCodeProps {
   files: Record<string, string> | null;
   projectId: string;
-
+  onFilesUpdate?: (updatedFiles: Record<string, string>) => void;
 }
 
 export default function ProjectCode({
   files,
   projectId,
+  onFilesUpdate,
 }: ProjectCodeProps) {
   const [htmlCode, setHtmlCode] = useState<string>(files?.["index.html"] || "");
   const [saveStatus, setSaveStatus] = useState<"saved" | "unsaved" | "saving">(
@@ -34,21 +35,27 @@ export default function ProjectCode({
     setSaveStatus("saving");
 
     try {
+      const updatedFiles = { ...files, "index.html": htmlCode };
       const response = await fetch(`/api/projects/${projectId}/update`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ files: { "index.html": htmlCode } }),
+        body: JSON.stringify({ files: updatedFiles }),
       });
 
       if (!response.ok) throw new Error("Failed to save");
 
       setSaveStatus("saved");
 
+      // ProjectScreen 업데이트를 위해 부모에게 알림
+      if (onFilesUpdate) {
+        onFilesUpdate(updatedFiles);
+      }
+
     } catch (error) {
       console.error("Save error:", error);
       setSaveStatus("unsaved");
     }
-  }, [projectId, htmlCode]);
+  }, [projectId, htmlCode, files, onFilesUpdate]);
 
   const handleCopyCode = useCallback(async () => {
     try {

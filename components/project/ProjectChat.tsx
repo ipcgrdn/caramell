@@ -17,7 +17,7 @@ import "highlight.js/styles/github-dark.css";
 
 interface ProjectChatProps {
   projectId: string;
-  onFilesUpdate?: () => void;
+  onFilesUpdate?: (updatedFiles: Record<string, string>) => void;
 }
 
 interface Message {
@@ -95,9 +95,9 @@ export default function ProjectChat({
       };
       setMessages((prev) => [...prev, assistantMessage]);
 
-      // If files were updated, refresh the parent
-      if (data.filesUpdated && onFilesUpdate) {
-        onFilesUpdate();
+      // If files were updated, notify parent with updated files
+      if (data.filesUpdated && data.updatedFiles && onFilesUpdate) {
+        onFilesUpdate(data.updatedFiles);
       }
     } catch (error) {
       console.error("Chat error:", error);
@@ -125,14 +125,14 @@ export default function ProjectChat({
   return (
     <div className="h-full flex flex-col border-l border-white/20">
       {/* Messages */}
-      <div className="flex-1 overflow-auto p-6 pb-32 space-y-4 relative z-10">
+      <div className="flex-1 overflow-auto p-6 mb-32 space-y-4 relative z-10">
         {/* Conversation Messages */}
         {messages.map((message, index) => (
           <div key={index} className="space-y-2">
             {message.role === "user" ? (
               <>
                 <div className="flex justify-end">
-                  <div className="bg-white/10 backdrop-blur-sm text-white rounded-lg px-4 py-2 max-w-[85%]">
+                  <div className="bg-white/10 backdrop-blur-sm text-white rounded-2xl px-4 py-2">
                     <p className="text-sm leading-relaxed">{message.content}</p>
                   </div>
                 </div>
@@ -161,8 +161,8 @@ export default function ProjectChat({
               </>
             ) : (
               <>
-                <div className="backdrop-blur-sm text-white px-4 py-2">
-                  <div className="text-sm leading-relaxed prose prose-invert prose-sm max-w-none">
+                <div className="text-white px-4 py-2">
+                  <div className="text-sm leading-relaxed">
                     <ReactMarkdown
                       remarkPlugins={[remarkGfm]}
                       rehypePlugins={[rehypeHighlight]}
@@ -266,7 +266,7 @@ export default function ProjectChat({
 
         {/* Loading State */}
         {isLoading && (
-          <div className="flex items-center pl-4">
+          <div className="flex items-center pl-4 mb-8">
             <MorphingSquare className="w-4 h-4" />
           </div>
         )}

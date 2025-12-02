@@ -26,6 +26,7 @@ export async function* generateWithGemini(
       generationConfig: {
         temperature: 0.5,
         maxOutputTokens: 16000,
+        responseMimeType: "application/json",
       },
     });
 
@@ -124,6 +125,7 @@ ${JSON.stringify(currentFiles, null, 2)}`;
       generationConfig: {
         temperature: 1,
         maxOutputTokens: 16000,
+        responseMimeType: "application/json",
       },
     });
 

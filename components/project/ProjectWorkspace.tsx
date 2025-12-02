@@ -24,6 +24,7 @@ interface Project {
 export default function ProjectWorkspace({ project }: { project: Project }) {
   const router = useRouter();
   const [currentStatus, setCurrentStatus] = useState(project.status);
+  const [files, setFiles] = useState<Record<string, string> | null>(project.files);
 
   const getStorageKey = (key: string) => `project_${project.id}_${key}`;
 
@@ -117,12 +118,14 @@ export default function ProjectWorkspace({ project }: { project: Project }) {
 
                   if (data.type === "complete") {
                     setCurrentStatus("ready");
-                    router.refresh();
+                    // SSE에서 받은 파일로 즉시 업데이트
+                    if (data.files) {
+                      setFiles(data.files);
+                    }
 
                     setTimeout(() => handleCaptureScreenshot(), 1000);
                   } else if (data.type === "error") {
                     setCurrentStatus("failed");
-                    router.refresh();
                   }
                 } catch (e) {
                   if (e instanceof SyntaxError) continue;
@@ -134,13 +137,12 @@ export default function ProjectWorkspace({ project }: { project: Project }) {
         } catch (error) {
           console.error("Generation error:", error);
           setCurrentStatus("failed");
-          router.refresh();
         }
       };
 
       startGeneration();
     }
-  }, [currentStatus, project.id, router, handleCaptureScreenshot]);
+  }, [currentStatus, project.id, handleCaptureScreenshot]);
 
   const handleResizeStart = () => {
     setIsResizing(true);
@@ -215,14 +217,15 @@ export default function ProjectWorkspace({ project }: { project: Project }) {
           {/* Code 뷰 */}
           <div className={currentView === "code" ? "h-full" : "hidden"}>
             <ProjectCode
-              files={project.files}
+              files={files}
               projectId={project.id}
+              onFilesUpdate={(updatedFiles) => setFiles(updatedFiles)}
             />
           </div>
 
           {/* Preview 뷰 - 항상 렌더링 (Code 뷰일 때는 숨김) */}
           <div className={currentView === "preview" ? "h-full" : "hidden"}>
-            <ProjectScreen files={project.files} viewportSize={viewportSize} />
+            <ProjectScreen files={files} viewportSize={viewportSize} />
           </div>
         </div>
 
@@ -244,11 +247,9 @@ export default function ProjectWorkspace({ project }: { project: Project }) {
             <div className="flex-1 overflow-hidden">
               <ProjectChat
                 projectId={project.id}
-                onFilesUpdate={() => {
-                  setTimeout(async () => {
-                    await handleCaptureScreenshot();
-                    router.refresh();
-                  }, 1000);
+                onFilesUpdate={(updatedFiles) => {
+                  setFiles(updatedFiles);
+                  setTimeout(() => handleCaptureScreenshot(), 1000);
                 }}
               />
             </div>
