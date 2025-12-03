@@ -52,9 +52,19 @@ export async function POST(
             )
           );
 
-          // 2. AI 스트리밍 생성 (선택한 모델 사용)
+          // 2. AI 스트리밍 생성 (선택한 모델 사용, 첨부 파일 포함)
           const aiModel = (project.aiModel as AIModel) || "gemini";
-          const generator = generateLandingPageStream(project.prompt, aiModel);
+          const attachedFiles = project.attachedFiles as Array<{
+            name: string;
+            type: string;
+            size: number;
+            data: string;
+          }> | null;
+          const generator = generateLandingPageStream(
+            project.prompt,
+            aiModel,
+            attachedFiles || undefined
+          );
           let result;
 
           // 3. 제너레이터를 끝까지 실행하여 return 값 가져오기

@@ -41,6 +41,5 @@ Layout Options:
 
 <FOOTER GUIDELINES>
 - Oversized typography (display-level font sizes for maximum impact)
-- Solid background color
 - Minimal content with strong visual impact
 </FOOTER GUIDELINES>`;

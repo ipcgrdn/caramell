@@ -5,7 +5,7 @@ import { SignedIn, SignedOut, UserButton } from "@clerk/nextjs";
 import { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useIsMobile } from "@/hooks/use-media-query";
-import { Menu, X } from "lucide-react";
+import { Menu, X, Briefcase } from "lucide-react";
 
 export default function Navbar() {
   const [isScrolled, setIsScrolled] = useState(false);
@@ -108,19 +108,15 @@ export default function Navbar() {
                 </div>
               </SignedOut>
               <SignedIn>
-                <UserButton
-                  appearance={{
-                    elements: {
-                      avatarBox: "w-10 h-10",
-                      userButtonPopoverCard:
-                        "bg-white/95 backdrop-blur-xl border border-black/10",
-                      userButtonPopoverActionButton:
-                        "!text-white hover:bg-black/5",
-                      userButtonPopoverActionButtonText: "!text-white",
-                      userButtonPopoverFooter: "hidden",
-                    },
-                  }}
-                />
+                <UserButton>
+                  <UserButton.MenuItems>
+                    <UserButton.Link
+                      label="Workspace"
+                      href="/project/workspace"
+                      labelIcon={<Briefcase className="w-4 h-4" />}
+                    />
+                  </UserButton.MenuItems>
+                </UserButton>
               </SignedIn>
             </div>
           </>
@@ -130,19 +126,15 @@ export default function Navbar() {
         {isMobile && (
           <div className="flex items-center gap-3">
             <SignedIn>
-              <UserButton
-                appearance={{
-                  elements: {
-                    avatarBox: "w-10 h-10",
-                    userButtonPopoverCard:
-                      "bg-white/95 backdrop-blur-xl border border-black/10",
-                    userButtonPopoverActionButton:
-                      "!text-white hover:bg-black/5",
-                    userButtonPopoverActionButtonText: "!text-white",
-                    userButtonPopoverFooter: "hidden",
-                  },
-                }}
-              />
+              <UserButton>
+                <UserButton.MenuItems>
+                  <UserButton.Link
+                    label="Workspace"
+                    href="/project/workspace"
+                    labelIcon={<Briefcase className="w-4 h-4" />}
+                  />
+                </UserButton.MenuItems>
+              </UserButton>
             </SignedIn>
             <button
               onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}

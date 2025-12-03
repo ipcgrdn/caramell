@@ -4,6 +4,7 @@ import {
   GenerationResult,
   ChatMessage,
   ChatResponse,
+  FileAttachment,
 } from "../aiTypes";
 import {
   cleanJsonResponse,
@@ -20,11 +21,44 @@ export const anthropic = new Anthropic({
  * Claude를 사용한 스트리밍 랜딩 페이지 생성
  */
 export async function* generateWithClaude(
-  prompt: string
+  prompt: string,
+  attachments?: FileAttachment[]
 ): AsyncGenerator<string, GenerationResult, unknown> {
   try {
+    // 메시지 구성 (파일 첨부가 있는 경우 배열 형식)
+    let userContent: string | Array<Anthropic.ImageBlockParam | Anthropic.TextBlockParam>;
+
+    if (attachments && attachments.length > 0) {
+      const contentBlocks: Array<Anthropic.ImageBlockParam | Anthropic.TextBlockParam> = [];
+
+      // 이미지 파일들을 먼저 추가
+      for (const file of attachments) {
+        if (file.type.startsWith("image/")) {
+          const base64Data = file.data.split(",")[1] || file.data;
+          contentBlocks.push({
+            type: "image",
+            source: {
+              type: "base64",
+              media_type: file.type as "image/jpeg" | "image/png" | "image/gif" | "image/webp",
+              data: base64Data,
+            },
+          });
+        }
+      }
+
+      // 텍스트 메시지 추가
+      contentBlocks.push({
+        type: "text",
+        text: prompt,
+      });
+
+      userContent = contentBlocks;
+    } else {
+      userContent = prompt;
+    }
+
     const stream = anthropic.messages.stream({
-      model: "claude-haiku-4-5",
+      model: "claude-sonnet-4-5-20250929",
       max_tokens: 16000,
       temperature: 0.7,
       system: [
@@ -37,7 +71,7 @@ export async function* generateWithClaude(
       messages: [
         {
           role: "user",
-          content: prompt,
+          content: userContent,
         },
       ],
     });
@@ -112,7 +146,8 @@ export async function* generateWithClaude(
 export async function chatWithClaude(
   userMessage: string,
   currentFiles: FileSystem,
-  chatHistory?: ChatMessage[]
+  chatHistory?: ChatMessage[],
+  attachments?: FileAttachment[]
 ): Promise<ChatResponse> {
   const systemPrompt = `${CHAT_SYSTEM_PROMPT}
 
@@ -120,10 +155,7 @@ CURRENT PROJECT FILES:
 ${JSON.stringify(currentFiles, null, 2)}`;
 
   try {
-    const messages: Array<{
-      role: "user" | "assistant";
-      content: string;
-    }> = [];
+    const messages: Anthropic.MessageParam[] = [];
 
     // 채팅 히스토리 추가
     if (chatHistory && chatHistory.length > 0) {
@@ -135,16 +167,50 @@ ${JSON.stringify(currentFiles, null, 2)}`;
       }
     }
 
-    // 현재 메시지 추가
-    messages.push({
-      role: "user",
-      content: `${userMessage}
+    // 현재 메시지 구성 (파일 첨부가 있는 경우 배열 형식)
+    if (attachments && attachments.length > 0) {
+      const contentBlocks: Array<Anthropic.ImageBlockParam | Anthropic.TextBlockParam> = [];
+
+      // 이미지 파일들을 먼저 추가
+      for (const file of attachments) {
+        if (file.type.startsWith("image/")) {
+          // data:image/jpeg;base64,... 형식에서 base64 부분만 추출
+          const base64Data = file.data.split(",")[1] || file.data;
+          contentBlocks.push({
+            type: "image",
+            source: {
+              type: "base64",
+              media_type: file.type as "image/jpeg" | "image/png" | "image/gif" | "image/webp",
+              data: base64Data,
+            },
+          });
+        }
+      }
+
+      // 텍스트 메시지 추가
+      contentBlocks.push({
+        type: "text",
+        text: `${userMessage}
 
 Remember: Return ONLY valid JSON. No markdown blocks.`,
-    });
+      });
+
+      messages.push({
+        role: "user",
+        content: contentBlocks,
+      });
+    } else {
+      // 파일 첨부가 없는 경우 기존 방식
+      messages.push({
+        role: "user",
+        content: `${userMessage}
+
+Remember: Return ONLY valid JSON. No markdown blocks.`,
+      });
+    }
 
     const response = await anthropic.messages.create({
-      model: "claude-haiku-4-5",
+      model: "claude-sonnet-4-5-20250929",
       max_tokens: 16000,
       temperature: 0.7,
       system: systemPrompt,

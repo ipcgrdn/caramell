@@ -1,4 +1,4 @@
-import { AIModel, FileSystem, ChatMessage, ChatResponse } from "./aiTypes";
+import { AIModel, FileSystem, ChatMessage, ChatResponse, FileAttachment } from "./aiTypes";
 
 import { chatWithClaude } from "./aiModels/claude";
 import { chatWithOpenAI } from "./aiModels/openai";
@@ -11,21 +11,23 @@ import { chatWithGemini } from "./aiModels/gemini";
  * @param currentFiles - 현재 프로젝트 파일들 (FileSystem 객체)
  * @param chatHistory - 이전 대화 히스토리 (컨텍스트 유지용)
  * @param model - 사용할 AI 모델 (기본값: "gemini")
+ * @param attachments - 첨부 파일들 (선택적)
  * @returns 응답 메시지와 선택적 파일 변경사항
  */
 export async function chatWithAI(
   userMessage: string,
   currentFiles: FileSystem,
   chatHistory?: ChatMessage[],
-  model: AIModel = "gemini"
+  model: AIModel = "gemini",
+  attachments?: FileAttachment[]
 ): Promise<ChatResponse> {
   switch (model) {
     case "claude":
-      return await chatWithClaude(userMessage, currentFiles, chatHistory);
+      return await chatWithClaude(userMessage, currentFiles, chatHistory, attachments);
     case "chatgpt":
-      return await chatWithOpenAI(userMessage, currentFiles, chatHistory);
+      return await chatWithOpenAI(userMessage, currentFiles, chatHistory, attachments);
     case "gemini":
-      return await chatWithGemini(userMessage, currentFiles, chatHistory);
+      return await chatWithGemini(userMessage, currentFiles, chatHistory, attachments);
     default:
       throw new Error(`Unsupported AI model: ${model}`);
   }

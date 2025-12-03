@@ -4,6 +4,7 @@ import {
   GenerationResult,
   ChatMessage,
   ChatResponse,
+  FileAttachment,
 } from "../aiTypes";
 import {
   cleanJsonResponse,
@@ -20,11 +21,41 @@ const openai = new OpenAI({
  * OpenAI를 사용한 스트리밍 랜딩 페이지 생성
  */
 export async function* generateWithOpenAI(
-  prompt: string
+  prompt: string,
+  attachments?: FileAttachment[]
 ): AsyncGenerator<string, GenerationResult, unknown> {
   try {
+    // 메시지 구성 (파일 첨부가 있는 경우 배열 형식)
+    let userContent: string | Array<OpenAI.Chat.Completions.ChatCompletionContentPart>;
+
+    if (attachments && attachments.length > 0) {
+      const contentParts: Array<OpenAI.Chat.Completions.ChatCompletionContentPart> = [];
+
+      // 텍스트 메시지를 먼저 추가
+      contentParts.push({
+        type: "text",
+        text: prompt,
+      });
+
+      // 이미지 파일들을 추가
+      for (const file of attachments) {
+        if (file.type.startsWith("image/")) {
+          contentParts.push({
+            type: "image_url",
+            image_url: {
+              url: file.data,
+            },
+          });
+        }
+      }
+
+      userContent = contentParts;
+    } else {
+      userContent = prompt;
+    }
+
     const stream = await openai.chat.completions.create({
-      model: "gpt-5-mini",
+      model: "gpt-5.1-2025-11-13",
       messages: [
         {
           role: "system",
@@ -32,7 +63,7 @@ export async function* generateWithOpenAI(
         },
         {
           role: "user",
-          content: prompt,
+          content: userContent,
         },
       ],
       max_completion_tokens: 16000,
@@ -104,7 +135,8 @@ export async function* generateWithOpenAI(
 export async function chatWithOpenAI(
   userMessage: string,
   currentFiles: FileSystem,
-  chatHistory?: ChatMessage[]
+  chatHistory?: ChatMessage[],
+  attachments?: FileAttachment[]
 ): Promise<ChatResponse> {
   const systemPrompt = `${CHAT_SYSTEM_PROMPT}
 
@@ -112,10 +144,7 @@ CURRENT PROJECT FILES:
 ${JSON.stringify(currentFiles, null, 2)}`;
 
   try {
-    const messages: Array<{
-      role: "system" | "user" | "assistant";
-      content: string;
-    }> = [
+    const messages: Array<OpenAI.Chat.Completions.ChatCompletionMessageParam> = [
       {
         role: "system",
         content: systemPrompt,
@@ -132,16 +161,46 @@ ${JSON.stringify(currentFiles, null, 2)}`;
       }
     }
 
-    // 현재 메시지 추가
-    messages.push({
-      role: "user",
-      content: `${userMessage}
+    // 현재 메시지 구성 (파일 첨부가 있는 경우 배열 형식)
+    if (attachments && attachments.length > 0) {
+      const contentParts: Array<OpenAI.Chat.Completions.ChatCompletionContentPart> = [];
+
+      // 텍스트 메시지를 먼저 추가
+      contentParts.push({
+        type: "text",
+        text: `${userMessage}
 
 Remember: Return ONLY valid JSON. No markdown blocks.`,
-    });
+      });
+
+      // 이미지 파일들을 추가
+      for (const file of attachments) {
+        if (file.type.startsWith("image/")) {
+          contentParts.push({
+            type: "image_url",
+            image_url: {
+              url: file.data,
+            },
+          });
+        }
+      }
+
+      messages.push({
+        role: "user",
+        content: contentParts,
+      });
+    } else {
+      // 파일 첨부가 없는 경우 기존 방식
+      messages.push({
+        role: "user",
+        content: `${userMessage}
+
+Remember: Return ONLY valid JSON. No markdown blocks.`,
+      });
+    }
 
     const response = await openai.chat.completions.create({
-      model: "gpt-5-mini",
+      model: "gpt-5.1-2025-11-13",
       messages,
       max_completion_tokens: 16000,
     });

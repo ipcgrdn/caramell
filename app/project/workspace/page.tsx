@@ -453,7 +453,7 @@ export default function WorkspacePage() {
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 px-4">
           <div className="bg-neutral-900/95 rounded-2xl p-6 max-w-md w-full border border-white/10">
             <h3 className="text-2xl font-playfair text-white mb-4 text-center">
-              Delete Project?
+              Delete Project
             </h3>
             <p className="text-white/60 mb-8 text-center text-sm leading-relaxed">
               This action cannot be undone.

@@ -28,6 +28,14 @@ export interface FileSystem {
   [filePath: string]: string;
 }
 
+// 첨부 파일 인터페이스
+export interface FileAttachment {
+  name: string;
+  type: string;
+  size: number;
+  data: string; // base64 encoded
+}
+
 // 생성 결과 인터페이스
 export interface GenerationResult {
   files: FileSystem;
@@ -38,6 +46,7 @@ export interface GenerationResult {
 export interface ChatMessage {
   role: "user" | "assistant";
   content: string;
+  attachments?: FileAttachment[];
 }
 
 // 채팅 응답 인터페이스

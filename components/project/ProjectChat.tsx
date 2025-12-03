@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
+import { toast } from "sonner";
 import { MorphingSquare } from "../ui/morphing-square";
 import { AIModel, AI_MODELS } from "@/lib/aiTypes";
 import { ModelIcons } from "@/lib/aiIcon";
@@ -37,7 +38,10 @@ export default function ProjectChat({
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [selectedModel, setSelectedModel] = useState<AIModel>("gemini");
+  const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
+  const [isDragging, setIsDragging] = useState(false);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Load chat history on mount
   useEffect(() => {
@@ -56,7 +60,6 @@ export default function ProjectChat({
     loadChatHistory();
   }, [projectId]);
 
-  // Auto-resize textarea
   useEffect(() => {
     if (textareaRef.current) {
       textareaRef.current.style.height = "auto";
@@ -75,15 +78,29 @@ export default function ProjectChat({
     setMessages((prev) => [...prev, userMessage]);
     const messageToSend = input;
     const modelToUse = selectedModel;
+    const filesToSend = selectedFiles;
     setInput("");
+    setSelectedFiles([]);
     setIsLoading(true);
 
-    // Call AI API to get response
     try {
+      const encodedFiles = await Promise.all(
+        filesToSend.map(async (file) => ({
+          name: file.name,
+          type: file.type,
+          size: file.size,
+          data: await fileToBase64(file),
+        }))
+      );
+
       const response = await fetch(`/api/projects/${projectId}/chat`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ message: messageToSend, aiModel: modelToUse }),
+        body: JSON.stringify({
+          message: messageToSend,
+          aiModel: modelToUse,
+          files: encodedFiles.length > 0 ? encodedFiles : undefined,
+        }),
       });
 
       if (!response.ok) throw new Error("Failed to get response");
@@ -120,6 +137,113 @@ export default function ProjectChat({
 
   const handleCopyMessage = (content: string) => {
     navigator.clipboard.writeText(content);
+  };
+
+  // 파일 선택 버튼 클릭 핸들러
+  const handleAttachClick = () => {
+    fileInputRef.current?.click();
+  };
+
+  // 파일 유효성 검사
+  const validateFiles = (files: File[]): File[] => {
+    const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
+    const validFiles: File[] = [];
+
+    for (const file of files) {
+      // 이미지 파일인지 확인
+      if (!file.type.startsWith("image/")) {
+        toast.error(`"${file.name}" is not an image file.`);
+        continue;
+      }
+
+      // 파일 크기 확인
+      if (file.size > MAX_FILE_SIZE) {
+        toast.error(`"${file.name}" exceeds 5MB size limit.`);
+        continue;
+      }
+
+      validFiles.push(file);
+    }
+
+    return validFiles;
+  };
+
+  // 파일 선택 핸들러
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (files && files.length > 0) {
+      const newFiles = Array.from(files);
+      const validFiles = validateFiles(newFiles);
+
+      if (validFiles.length > 0) {
+        setSelectedFiles((prev) => {
+          const combined = [...prev, ...validFiles];
+          if (combined.length > 5) {
+            toast.error("You can attach up to 5 files.");
+            return combined.slice(0, 5);
+          }
+          return combined;
+        });
+      }
+    }
+    // 같은 파일을 다시 선택할 수 있도록 value 초기화
+    e.target.value = "";
+  };
+
+  // 파일 제거 핸들러
+  const handleRemoveFile = (index: number) => {
+    setSelectedFiles((prev) => prev.filter((_, i) => i !== index));
+  };
+
+  // 파일을 Base64로 인코딩하는 함수
+  const fileToBase64 = (file: File): Promise<string> => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.readAsDataURL(file);
+      reader.onload = () => resolve(reader.result as string);
+      reader.onerror = (error) => reject(error);
+    });
+  };
+
+  // 드래그 앤 드롭 핸들러
+  const handleDragEnter = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(true);
+  };
+
+  const handleDragLeave = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(false);
+  };
+
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+  };
+
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(false);
+
+    const files = e.dataTransfer.files;
+    if (files && files.length > 0) {
+      const newFiles = Array.from(files);
+      const validFiles = validateFiles(newFiles);
+
+      if (validFiles.length > 0) {
+        setSelectedFiles((prev) => {
+          const combined = [...prev, ...validFiles];
+          if (combined.length > 5) {
+            toast.error("You can attach up to 5 files.");
+            return combined.slice(0, 5);
+          }
+          return combined;
+        });
+      }
+    }
   };
 
   return (
@@ -273,9 +397,19 @@ export default function ProjectChat({
       </div>
 
       {/* Floating Input */}
-      <div className="absolute bottom-0 left-0 right-0 p-4 z-20">
+      <div className="absolute bottom-0 left-0 right-0 p-4 z-20 bg-black">
         <form onSubmit={handleSubmit} className="relative z-10">
-          <div className="relative bg-white/10 border border-white/10 rounded-2xl overflow-hidden">
+          <div
+            className={`relative bg-white/10 border rounded-2xl overflow-hidden transition-all ${
+              isDragging
+                ? "border-[#D4A574] border-2 bg-[#D4A574]/10"
+                : "border-white/10"
+            }`}
+            onDragEnter={handleDragEnter}
+            onDragLeave={handleDragLeave}
+            onDragOver={handleDragOver}
+            onDrop={handleDrop}
+          >
             {/* Two-layer structure */}
             <div className="relative">
               {/* Top Layer - Input */}
@@ -296,12 +430,100 @@ export default function ProjectChat({
                 />
               </div>
 
+              {/* 파일 미리보기 */}
+              {selectedFiles.length > 0 && (
+                <div className="px-4 pb-2 flex flex-wrap gap-2">
+                  {selectedFiles.map((file, index) => (
+                    <div
+                      key={index}
+                      className="flex items-center gap-2 border border-white/10 rounded-lg px-2 py-1 text-xs text-white hover:bg-white/10 transition-colors"
+                    >
+                      {/* 파일 아이콘 */}
+                      <div className="shrink-0">
+                        {file.type.startsWith("image/") ? (
+                          <svg
+                            className="w-3 h-3"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2}
+                              d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
+                            />
+                          </svg>
+                        ) : (
+                          <svg
+                            className="w-3 h-3"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2}
+                              d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"
+                            />
+                          </svg>
+                        )}
+                      </div>
+
+                      {/* 파일 정보 */}
+                      <div className="flex-1 min-w-0">
+                        <div className="truncate max-w-[100px]">
+                          {file.name}
+                        </div>
+                      </div>
+
+                      {/* 제거 버튼 */}
+                      <button
+                        type="button"
+                        onClick={() => handleRemoveFile(index)}
+                        className="shrink-0 p-0.5 hover:bg-white/20 rounded-full transition-colors"
+                        title="Remove file"
+                      >
+                        <svg
+                          className="w-3 h-3"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M6 18L18 6M6 6l12 12"
+                          />
+                        </svg>
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
+
               {/* Bottom Layer - Actions */}
               <div className="px-2 py-1.5 flex items-center justify-between">
                 <div className="flex items-center gap-1">
+                  {/* Hidden File Input */}
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    multiple
+                    accept="image/*"
+                    onChange={handleFileChange}
+                    className="hidden"
+                  />
+
+                  {/* Attach Button */}
                   <button
+                    type="button"
+                    onClick={handleAttachClick}
                     disabled={isLoading}
                     className="p-1 hover:bg-white/10 rounded-full transition-colors disabled:opacity-50"
+                    title="Attach file"
                   >
                     <svg
                       className="w-3 h-3 text-white"

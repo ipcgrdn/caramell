@@ -10,7 +10,7 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const { prompt, aiModel } = await req.json();
+    const { prompt, aiModel, files } = await req.json();
 
     if (!prompt || prompt.trim().length === 0) {
       return NextResponse.json(
@@ -32,13 +32,14 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "User not found" }, { status: 404 });
     }
 
-    // Create project (status: generating)
+    // Create project (status: generating) with attached files
     const project = await prisma.project.create({
       data: {
         userId: user.id,
         prompt: prompt.trim(),
         status: "generating",
         aiModel: selectedModel,
+        attachedFiles: files || null,
       },
     });
 

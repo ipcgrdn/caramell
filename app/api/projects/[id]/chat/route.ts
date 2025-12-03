@@ -96,7 +96,7 @@ export async function POST(
 
     // Get request body
     const body = await req.json();
-    const { message, aiModel } = body;
+    const { message, aiModel, files } = body;
 
     if (!message) {
       return NextResponse.json({ error: "Message required" }, { status: 400 });
@@ -137,7 +137,8 @@ export async function POST(
         message,
         currentFiles,
         previousMessages as ChatMessage[],
-        selectedModel as AIModel
+        selectedModel as AIModel,
+        files
       );
 
       // Merge fileChanges with current files (only update changed files)
