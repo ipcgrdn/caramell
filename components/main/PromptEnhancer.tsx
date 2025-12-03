@@ -73,16 +73,16 @@ export default function PromptEnhancerModal({
       />
 
       {/* Modal */}
-      <div className="relative w-full max-w-4xl max-h-[85vh] bg-black/80 rounded-2xl overflow-hidden">
+      <div className="relative w-full mx-4 max-w-4xl max-h-[85vh] bg-black/80 rounded-2xl overflow-hidden">
         {/* Header */}
         <div className="px-6 py-2 flex items-center justify-between border-b border-white/10">
-          <h2 className="text-lg font-semibold text-white">Enhancer</h2>
+          <h2 className="text-sm md:text-lg font-semibold text-white">Enhancer</h2>
           <button
             onClick={onClose}
             className="p-2 hover:bg-white/10 rounded-full transition-colors"
           >
             <svg
-              className="w-5 h-5 text-white"
+              className="w-4 h-4 md:w-5 md:h-5 text-white"
               fill="none"
               stroke="currentColor"
               viewBox="0 0 24 24"
@@ -99,7 +99,7 @@ export default function PromptEnhancerModal({
 
         {/* Content */}
         <div className="p-6 overflow-y-auto max-h-[calc(85vh-180px)]">
-          <div className="grid grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
             {DESIGN_STYLES.map((style) => (
               <button
                 key={style.id}

@@ -56,7 +56,7 @@ export default function RecentProject() {
 
   return (
     <div className="w-full">
-      <div className="max-w-8xl mx-auto px-8">
+      <div className="max-w-8xl mx-auto px-0 md:px-8">
         <div className="bg-black/50 rounded-4xl p-10 relative z-20 shadow-xl">
           <div className="flex items-center justify-between mb-8">
             <h2 className="text-2xl md:text-4xl font-playfair text-white">

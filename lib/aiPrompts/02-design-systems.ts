@@ -5,6 +5,7 @@ Trending Fonts:
 - **Instrument Serif**: Modern serif, Gen Z favorite
 - **Roboto**: Clean, modern sans-serif
 - **Montserrat**: Clean, modern sans-serif
+
 Italic Emphasis Trend:
 Mix italic words within sentences for emphasis:
 \`\`\`html
@@ -12,6 +13,7 @@ Mix italic words within sentences for emphasis:
   Design <em class="italic">faster</em> and smarter
 </h1>
 \`\`\`
+
 Mixed Font Pairing Trend:
 Combine different font families within a single sentence for visual hierarchy:
 \`\`\`html
@@ -20,6 +22,11 @@ Combine different font families within a single sentence for visual hierarchy:
 </h1>
 <!-- Example: Manrope (sans-serif) + Playfair Display (serif) -->
 \`\`\`
+
+Text Effects (for key messages only):
+- Typing animation with cursor
+- Encrypted text reveal (gibberish → clear text)
+- Text flip (character rotation)
 </TYPOGRAPHY SYSTEMS>
 
 <COLOR SYSTEMS>

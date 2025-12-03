@@ -21,7 +21,7 @@ export async function POST(req: Request) {
 
     // Validate AI model
     const validModels = ["claude", "chatgpt", "gemini"];
-    const selectedModel = aiModel && validModels.includes(aiModel) ? aiModel : "claude";
+    const selectedModel = aiModel && validModels.includes(aiModel) ? aiModel : "gemini";
 
     // Find user in database
     const user = await prisma.user.findUnique({

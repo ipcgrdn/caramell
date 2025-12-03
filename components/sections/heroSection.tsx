@@ -12,7 +12,7 @@ export default function HeroSection() {
       />
 
       {/* Content */}
-      <div className="relative z-10 h-full flex flex-col items-center justify-center px-8 py-20 mb-20">
+      <div className="relative z-10 h-full flex flex-col items-center justify-center px-4 md:px-8 py-4 md:py-20 mb-20">
         {/* Main Title */}
         <h1 className="text-5xl md:text-7xl font-playfair text-white mb-4 text-center">
           <span className="font-playfair italic">Beautiful</span>{" "}
@@ -22,7 +22,7 @@ export default function HeroSection() {
         </h1>
 
         {/* Subtitle */}
-        <p className="text-white/60 text-lg mb-12 text-center max-w-2xl font-sans not-italic">
+        <p className="text-white/60 text-sm md:text-lg mb-12 text-center max-w-2xl font-sans not-italic">
           Create stunning landing page in seconds
         </p>
 

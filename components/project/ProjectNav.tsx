@@ -73,7 +73,7 @@ export default function ProjectNav({
                 d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"
               />
             </svg>
-            Code
+            <span className="hidden md:block">Code</span>
           </button>
           <button
             onClick={() => onViewChange("preview")}
@@ -102,12 +102,12 @@ export default function ProjectNav({
                 d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"
               />
             </svg>
-            Preview
+            <span className="hidden md:block">Preview</span>
           </button>
         </div>
 
         {/* Viewport controls - disabled when not in preview mode */}
-        <div className="flex items-center gap-1 bg-white/5 rounded-lg p-1">
+        <div className="hidden md:flex items-center gap-1 bg-white/5 rounded-lg p-1">
           <button
             onClick={() => onViewportChange?.("desktop")}
             disabled={currentView !== "preview" || !onViewportChange}
@@ -249,7 +249,7 @@ export default function ProjectNav({
               d="M13 10V3L4 14h7v7l9-11h-7z"
             />
           </svg>
-          Upgrade
+          <span className="hidden md:block">Upgrade</span>
         </button>
         <button className="px-2 py-1 bg-white hover:bg-[#D4A574] text-black text-xs rounded-lg transition-colors flex items-center gap-1.5">
           <svg
@@ -265,7 +265,7 @@ export default function ProjectNav({
               d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"
             />
           </svg>
-          Export
+          <span className="hidden md:block">Export</span>
         </button>
 
         {/* Chat toggle button */}

@@ -2,6 +2,7 @@
 
 import { useState, useCallback, useEffect } from "react";
 import Editor from "@monaco-editor/react";
+import { useIsMobile } from "@/hooks/use-media-query";
 
 interface ProjectCodeProps {
   files: Record<string, string> | null;
@@ -14,6 +15,7 @@ export default function ProjectCode({
   projectId,
   onFilesUpdate,
 }: ProjectCodeProps) {
+  const isMobile = useIsMobile();
   const [htmlCode, setHtmlCode] = useState<string>(files?.["index.html"] || "");
   const [saveStatus, setSaveStatus] = useState<"saved" | "unsaved" | "saving">(
     "saved"
@@ -50,7 +52,6 @@ export default function ProjectCode({
       if (onFilesUpdate) {
         onFilesUpdate(updatedFiles);
       }
-
     } catch (error) {
       console.error("Save error:", error);
       setSaveStatus("unsaved");
@@ -176,7 +177,7 @@ export default function ProjectCode({
           theme="vs-dark"
           options={{
             minimap: { enabled: false },
-            fontSize: 13,
+            fontSize: isMobile ? 11 : 13,
             lineNumbers: "on",
             readOnly: false,
             scrollBeyondLastLine: false,

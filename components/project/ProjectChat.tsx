@@ -36,7 +36,7 @@ export default function ProjectChat({
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
-  const [selectedModel, setSelectedModel] = useState<AIModel>("claude");
+  const [selectedModel, setSelectedModel] = useState<AIModel>("gemini");
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   // Load chat history on mount

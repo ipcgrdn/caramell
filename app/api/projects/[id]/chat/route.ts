@@ -106,7 +106,7 @@ export async function POST(
     const validModels = ["claude", "chatgpt", "gemini"];
     const selectedModel = aiModel && validModels.includes(aiModel)
       ? aiModel
-      : ((project.aiModel as AIModel) || "claude");
+      : ((project.aiModel as AIModel) || "gemini");
 
     // Get chat history before saving new message
     const previousMessages = await prisma.chatMessage.findMany({

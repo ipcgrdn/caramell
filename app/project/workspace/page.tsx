@@ -193,7 +193,7 @@ export default function WorkspacePage() {
     <div className="min-h-screen bg-neutral-900">
       <Navbar />
 
-      <div className="pt-32 pb-20 px-6 md:px-8 lg:px-12">
+      <div className="pt-28 md:pt-32 pb-20 px-6 md:px-8 lg:px-12">
         <div className="max-w-8xl mx-auto">
           {/* Header */}
 
@@ -202,7 +202,7 @@ export default function WorkspacePage() {
             <div className="relative flex-1">
               <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
                 <svg
-                  className="h-5 w-5 text-white/50 z-10"
+                  className="w-4 h-4 md:h-5 md:w-5 text-white/50 z-10"
                   fill="none"
                   stroke="currentColor"
                   viewBox="0 0 24 24"
@@ -220,7 +220,7 @@ export default function WorkspacePage() {
                 placeholder="Search your projects..."
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
-                className="w-full pl-12 pr-4 py-2 md:py-4 bg-white/5 rounded-2xl text-white placeholder-white/40 focus:outline-none"
+                className="w-full pl-12 pr-4 py-2 md:py-4 bg-white/5 rounded-2xl text-white text-sm md:text-base placeholder-white/40 focus:outline-none"
               />
             </div>
 
@@ -413,7 +413,7 @@ export default function WorkspacePage() {
                         </div>
                       ) : (
                         <>
-                          <h3 className="text-white mb-2 line-clamp-1">
+                          <h3 className="text-sm text-white mb-2 line-clamp-1">
                             {project.name || "Untitled"}
                           </h3>
                           <p className="text-white/40 text-xs">

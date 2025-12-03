@@ -17,7 +17,7 @@ import PromptEnhancerModal from "./PromptEnhancer";
 export default function PromptInput() {
   const [prompt, setPrompt] = useState("");
   const [isLoading, setIsLoading] = useState(false);
-  const [selectedModel, setSelectedModel] = useState<AIModel>("claude");
+  const [selectedModel, setSelectedModel] = useState<AIModel>("gemini");
   const [isEnhancerOpen, setIsEnhancerOpen] = useState(false);
   const [designStyle, setDesignStyle] = useState<string>("");
   const router = useRouter();

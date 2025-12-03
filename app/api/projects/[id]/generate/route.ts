@@ -53,7 +53,7 @@ export async function POST(
           );
 
           // 2. AI 스트리밍 생성 (선택한 모델 사용)
-          const aiModel = (project.aiModel as AIModel) || "claude";
+          const aiModel = (project.aiModel as AIModel) || "gemini";
           const generator = generateLandingPageStream(project.prompt, aiModel);
           let result;
 

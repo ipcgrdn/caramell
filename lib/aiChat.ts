@@ -10,14 +10,14 @@ import { chatWithGemini } from "./aiModels/gemini";
  * @param userMessage - 사용자의 수정 요청 메시지
  * @param currentFiles - 현재 프로젝트 파일들 (FileSystem 객체)
  * @param chatHistory - 이전 대화 히스토리 (컨텍스트 유지용)
- * @param model - 사용할 AI 모델 (기본값: "claude")
+ * @param model - 사용할 AI 모델 (기본값: "gemini")
  * @returns 응답 메시지와 선택적 파일 변경사항
  */
 export async function chatWithAI(
   userMessage: string,
   currentFiles: FileSystem,
   chatHistory?: ChatMessage[],
-  model: AIModel = "claude"
+  model: AIModel = "gemini"
 ): Promise<ChatResponse> {
   switch (model) {
     case "claude":

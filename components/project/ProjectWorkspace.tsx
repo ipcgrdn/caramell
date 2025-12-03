@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback, useRef } from "react";
 import { useRouter } from "next/navigation";
+import { useIsMobile } from "@/hooks/use-media-query";
 
 import ProjectNav from "./ProjectNav";
 import ProjectCode from "./ProjectCode";
@@ -23,6 +24,8 @@ interface Project {
 
 export default function ProjectWorkspace({ project }: { project: Project }) {
   const router = useRouter();
+  const isMobile = useIsMobile();
+  
   const [currentStatus, setCurrentStatus] = useState(project.status);
   const [files, setFiles] = useState<Record<string, string> | null>(project.files);
 
@@ -32,7 +35,7 @@ export default function ProjectWorkspace({ project }: { project: Project }) {
   const [viewportSize, setViewportSize] = useState<
     "desktop" | "tablet" | "mobile"
   >("desktop");
-  const [isChatOpen, setIsChatOpen] = useState(true);
+  const [isChatOpen, setIsChatOpen] = useState<boolean>(!isMobile);
   const [chatWidth, setChatWidth] = useState(400);
 
   useEffect(() => {
