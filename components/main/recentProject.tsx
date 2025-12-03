@@ -58,9 +58,30 @@ export default function RecentProject() {
     <div className="w-full">
       <div className="max-w-8xl mx-auto px-8">
         <div className="bg-black/50 rounded-4xl p-10 relative z-20 shadow-xl">
-          <h2 className="text-2xl md:text-4xl font-playfair text-white mb-8">
-            Recent
-          </h2>
+          <div className="flex items-center justify-between mb-8">
+            <h2 className="text-2xl md:text-4xl font-playfair text-white">
+              Recent
+            </h2>
+            <Link
+              href="/project/workspace"
+              className="group flex gap-2 text-white/70 hover:text-white transition-colors"
+            >
+              <span className="text-sm font-medium">View All</span>
+              <svg
+                className="w-4 h-4 transform group-hover:translate-x-1 transition-transform"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M9 5l7 7-7 7"
+                />
+              </svg>
+            </Link>
+          </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
             {projects.map((project) => (
