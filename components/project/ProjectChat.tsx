@@ -42,6 +42,8 @@ export default function ProjectChat({
   const [isDragging, setIsDragging] = useState(false);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const abortControllerRef = useRef<AbortController | null>(null);
+  const latestRequestIdRef = useRef<string | null>(null);
 
   // Load chat history on mount
   useEffect(() => {
@@ -83,6 +85,13 @@ export default function ProjectChat({
     setSelectedFiles([]);
     setIsLoading(true);
 
+    // 고유한 요청 ID 생성
+    const requestId = Date.now().toString();
+    latestRequestIdRef.current = requestId;
+
+    const abortController = new AbortController();
+    abortControllerRef.current = abortController;
+
     try {
       const encodedFiles = await Promise.all(
         filesToSend.map(async (file) => ({
@@ -100,12 +109,21 @@ export default function ProjectChat({
           message: messageToSend,
           aiModel: modelToUse,
           files: encodedFiles.length > 0 ? encodedFiles : undefined,
+          requestId, // 요청 ID 전달
         }),
+        signal: abortController.signal,
       });
 
       if (!response.ok) throw new Error("Failed to get response");
 
       const data = await response.json();
+
+      // 최신 요청이 아니면 무시 (이중 검증: 클라이언트 & 서버)
+      if (latestRequestIdRef.current !== requestId || data.requestId !== requestId) {
+        console.log("Ignoring outdated response");
+        return;
+      }
+
       const assistantMessage: Message = {
         role: "assistant",
         content: data.response,
@@ -117,6 +135,15 @@ export default function ProjectChat({
         onFilesUpdate(data.updatedFiles);
       }
     } catch (error) {
+      if (error instanceof Error && error.name === "AbortError") {
+        return;
+      }
+
+      // 최신 요청이 아니면 에러도 무시
+      if (latestRequestIdRef.current !== requestId) {
+        return;
+      }
+
       console.error("Chat error:", error);
       const errorMessage: Message = {
         role: "assistant",
@@ -124,7 +151,31 @@ export default function ProjectChat({
       };
       setMessages((prev) => [...prev, errorMessage]);
     } finally {
+      // 최신 요청일 때만 로딩 해제
+      if (latestRequestIdRef.current === requestId) {
+        setIsLoading(false);
+      }
+      abortControllerRef.current = null;
+    }
+  };
+
+  const handleStop = async () => {
+    if (abortControllerRef.current) {
+      abortControllerRef.current.abort();
+
+      // 서버에 중단 신호 전송 (백그라운드에서 실행)
+      if (latestRequestIdRef.current) {
+        fetch(`/api/projects/${projectId}/chat`, {
+          method: "DELETE",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ requestId: latestRequestIdRef.current }),
+        }).catch((error) => {
+          console.error("Failed to notify server about abort:", error);
+        });
+      }
+
       setIsLoading(false);
+      abortControllerRef.current = null;
     }
   };
 
@@ -587,27 +638,44 @@ export default function ProjectChat({
                   </DropdownMenu>
                 </div>
 
-                {/* Submit Button */}
-                <button
-                  type="submit"
-                  disabled={isLoading || !input.trim()}
-                  className="shrink-0 w-5 h-5 p-1 rounded-full hover:bg-white/10 disabled:opacity-50 disabled:cursor-not-allowed text-white flex items-center justify-center"
-                  aria-label="Send message"
-                >
-                  <svg
-                    className="w-3 h-3"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                    strokeWidth={2.5}
+                {/* Submit/Stop Button */}
+                {isLoading ? (
+                  <button
+                    type="button"
+                    onClick={handleStop}
+                    className="shrink-0 w-5 h-5 rounded-full hover:bg-white/10 text-white flex items-center justify-center"
+                    aria-label="Stop generation"
                   >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      d="M5 10l7-7m0 0l7 7m-7-7v18"
-                    />
-                  </svg>
-                </button>
+                    <svg
+                      className="w-5 h-5"
+                      fill="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <rect x="6" y="6" width="12" height="12" rx="1" />
+                    </svg>
+                  </button>
+                ) : (
+                  <button
+                    type="submit"
+                    disabled={!input.trim()}
+                    className="shrink-0 w-5 h-5 p-1 rounded-full hover:bg-white/10 disabled:opacity-50 disabled:cursor-not-allowed text-white flex items-center justify-center"
+                    aria-label="Send message"
+                  >
+                    <svg
+                      className="w-3 h-3"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                      strokeWidth={2.5}
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        d="M5 10l7-7m0 0l7 7m-7-7v18"
+                      />
+                    </svg>
+                  </button>
+                )}
               </div>
             </div>
           </div>

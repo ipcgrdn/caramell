@@ -190,7 +190,7 @@ export default function WorkspacePage() {
   }
 
   return (
-    <div className="min-h-screen bg-[#D4A574]">
+    <div className="min-h-screen bg-[#6B4E36]">
       <Navbar />
 
       <div className="pt-28 md:pt-32 pb-20">

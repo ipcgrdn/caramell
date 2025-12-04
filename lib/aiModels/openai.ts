@@ -214,7 +214,24 @@ Remember: Return ONLY valid JSON. No markdown blocks.`,
 
     try {
       const result = JSON.parse(cleanedResponse);
-      return result as ChatResponse;
+
+      // Validate response structure
+      if (!result || typeof result !== 'object') {
+        throw new Error("Response is not an object");
+      }
+
+      // AI가 'response' 또는 'message' 필드로 반환할 수 있음
+      const responseText = result.response || result.message;
+      if (!responseText || typeof responseText !== 'string') {
+        console.error("Invalid response structure:", result);
+        throw new Error("Missing or invalid 'response' or 'message' field");
+      }
+
+      // 필드명을 'response'로 정규화
+      return {
+        response: responseText,
+        fileChanges: result.fileChanges
+      } as ChatResponse;
     } catch (parseError) {
       console.error("JSON Parse error:", parseError);
       console.error("Response was:", cleanedResponse);

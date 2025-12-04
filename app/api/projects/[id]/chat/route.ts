@@ -5,6 +5,19 @@ import { prisma } from "@/lib/db";
 import { AIModel, ChatMessage } from "@/lib/aiTypes";
 import { chatWithAI } from "@/lib/aiChat";
 
+// 중단된 요청 ID를 추적하는 Set (5분 후 자동 정리)
+const abortedRequests = new Map<string, number>();
+
+// 주기적으로 오래된 항목 정리 (5분 이상 지난 것)
+setInterval(() => {
+  const now = Date.now();
+  for (const [requestId, timestamp] of abortedRequests.entries()) {
+    if (now - timestamp > 5 * 60 * 1000) {
+      abortedRequests.delete(requestId);
+    }
+  }
+}, 60 * 1000); // 1분마다 정리
+
 // GET: Fetch chat history
 export async function GET(
   _req: Request,
@@ -96,7 +109,7 @@ export async function POST(
 
     // Get request body
     const body = await req.json();
-    const { message, aiModel, files } = body;
+    const { message, aiModel, files, requestId } = body;
 
     if (!message) {
       return NextResponse.json({ error: "Message required" }, { status: 400 });
@@ -104,9 +117,10 @@ export async function POST(
 
     // Validate AI model (fall back to project's default if not provided)
     const validModels = ["claude", "chatgpt", "gemini"];
-    const selectedModel = aiModel && validModels.includes(aiModel)
-      ? aiModel
-      : ((project.aiModel as AIModel) || "gemini");
+    const selectedModel =
+      aiModel && validModels.includes(aiModel)
+        ? aiModel
+        : (project.aiModel as AIModel) || "gemini";
 
     // Get chat history before saving new message
     const previousMessages = await prisma.chatMessage.findMany({
@@ -141,6 +155,11 @@ export async function POST(
         files
       );
 
+      // Validate response
+      if (!result || !result.response) {
+        throw new Error("AI returned invalid response: missing response field");
+      }
+
       // Merge fileChanges with current files (only update changed files)
       let updatedFiles = { ...currentFiles };
       let filesChanged: string[] = [];
@@ -162,6 +181,15 @@ export async function POST(
         });
       }
 
+      // 중단된 요청인지 확인
+      if (requestId && abortedRequests.has(requestId)) {
+        abortedRequests.delete(requestId);
+        return NextResponse.json(
+          { error: "Request was aborted" },
+          { status: 499 } // Client Closed Request
+        );
+      }
+
       // Save assistant message to database
       await prisma.chatMessage.create({
         data: {
@@ -178,6 +206,7 @@ export async function POST(
         filesUpdated: filesChanged.length > 0,
         filesChanged,
         updatedFiles: updatedFiles,
+        requestId,
       });
     } catch (error) {
       console.error("Chat AI error:", error);
@@ -190,6 +219,38 @@ export async function POST(
     console.error("Error:", error);
     return NextResponse.json(
       { error: "Internal server error" },
+      { status: 500 }
+    );
+  }
+}
+
+// DELETE: Abort a pending request
+export async function DELETE(req: Request) {
+  try {
+    const { userId } = await auth();
+
+    if (!userId) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    const body = await req.json();
+    const { requestId } = body;
+
+    if (!requestId) {
+      return NextResponse.json(
+        { error: "requestId required" },
+        { status: 400 }
+      );
+    }
+
+    // 중단된 요청으로 표시
+    abortedRequests.set(requestId, Date.now());
+
+    return NextResponse.json({ success: true });
+  } catch (error) {
+    console.error("Error aborting request:", error);
+    return NextResponse.json(
+      { error: "Failed to abort request" },
       { status: 500 }
     );
   }
