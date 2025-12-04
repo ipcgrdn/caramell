@@ -44,6 +44,9 @@ export default function ProjectChat({
   const fileInputRef = useRef<HTMLInputElement>(null);
   const abortControllerRef = useRef<AbortController | null>(null);
   const latestRequestIdRef = useRef<string | null>(null);
+  const messagesEndRef = useRef<HTMLDivElement>(null);
+  const inputContainerRef = useRef<HTMLDivElement>(null);
+  const [inputHeight, setInputHeight] = useState(0);
 
   // Load chat history on mount
   useEffect(() => {
@@ -61,6 +64,27 @@ export default function ProjectChat({
 
     loadChatHistory();
   }, [projectId]);
+
+  // 자동 스크롤
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "auto" });
+  }, [messages, isLoading]);
+
+  // 입력창 높이 측정
+  useEffect(() => {
+    const updateInputHeight = () => {
+      if (inputContainerRef.current) {
+        setInputHeight(inputContainerRef.current.offsetHeight);
+      }
+    };
+    updateInputHeight();
+
+    const resizeObserver = new ResizeObserver(updateInputHeight);
+    if (inputContainerRef.current) {
+      resizeObserver.observe(inputContainerRef.current);
+    }
+    return () => resizeObserver.disconnect();
+  }, []);
 
   useEffect(() => {
     if (textareaRef.current) {
@@ -300,7 +324,10 @@ export default function ProjectChat({
   return (
     <div className="h-full flex flex-col border-l border-white/20">
       {/* Messages */}
-      <div className="flex-1 overflow-auto p-6 mb-32 space-y-4 relative z-10">
+      <div
+        className="flex-1 overflow-auto p-6 space-y-4 relative z-10"
+        style={{ paddingBottom: inputHeight + 24 }}
+      >
         {/* Conversation Messages */}
         {messages.map((message, index) => (
           <div key={index} className="space-y-2">
@@ -445,10 +472,16 @@ export default function ProjectChat({
             <MorphingSquare className="w-4 h-4" />
           </div>
         )}
+
+        {/* 자동 스크롤 앵커 */}
+        <div ref={messagesEndRef} />
       </div>
 
       {/* Floating Input */}
-      <div className="absolute bottom-0 left-0 right-0 p-4 z-20 bg-black">
+      <div
+        ref={inputContainerRef}
+        className="absolute bottom-0 left-0 right-0 p-4 z-20 bg-black mx-1"
+      >
         <form onSubmit={handleSubmit} className="relative z-10">
           <div
             className={`relative bg-white/10 border rounded-2xl overflow-hidden transition-all ${

@@ -30,7 +30,7 @@ export async function* generateLandingPageStream(
     }
   })();
 
-// 아래의 console.log는 추후 제거 예정
+  // 아래의 console.log는 추후 제거 예정
 
   let finalResult: GenerationResult = { files: {}, message: "" };
 
@@ -39,7 +39,6 @@ export async function* generateLandingPageStream(
 
     if (done) {
       finalResult = value ?? finalResult;
-      console.log(`[AI:${model}] final response`, finalResult);
       return finalResult;
     }
 

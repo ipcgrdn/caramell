@@ -10,8 +10,8 @@ import ProjectCode from "./ProjectCode";
 import ProjectScreen from "./ProjectScreen";
 import ProjectChat from "./ProjectChat";
 import GeneratingModal from "./GeneratingModal";
+import CreatingModal from "./CreatingModal";
 
-import { MorphingSquare } from "../ui/morphing-square";
 import { captureAndUploadScreenshot } from "@/lib/screenshot";
 
 interface Project {
@@ -42,6 +42,7 @@ export default function ProjectWorkspace({ project }: { project: Project }) {
   const [isChatOpen, setIsChatOpen] = useState<boolean>(!isMobile);
   const [chatWidth, setChatWidth] = useState(400);
   const [isGeneratingNextJs, setIsGeneratingNextJs] = useState(false);
+  const [streamingCode, setStreamingCode] = useState<string>("");
 
   useEffect(() => {
     const savedView = localStorage.getItem(getStorageKey("currentView"));
@@ -111,6 +112,7 @@ export default function ProjectWorkspace({ project }: { project: Project }) {
 
           const reader = response.body.getReader();
           const decoder = new TextDecoder();
+          let accumulatedText = "";
 
           while (true) {
             const { done, value } = await reader.read();
@@ -124,8 +126,33 @@ export default function ProjectWorkspace({ project }: { project: Project }) {
                 try {
                   const data = JSON.parse(line.slice(6));
 
-                  if (data.type === "complete") {
+                  if (data.type === "chunk") {
+                    console.log("[DEBUG] Received chunk:", data.text?.substring(0, 100));
+
+                    // 스트리밍 텍스트 누적
+                    accumulatedText += data.text;
+                    console.log("[DEBUG] Accumulated length:", accumulatedText.length);
+
+                    // HTML 코드 부분만 추출 (콜론 앞뒤 공백 허용)
+                    const htmlMatch = accumulatedText.match(/"index\.html"\s*:\s*"([\s\S]*?)(?:"}}|$)/);
+                    if (htmlMatch) {
+                      console.log("[DEBUG] HTML matched! Length:", htmlMatch[1].length);
+
+                      // 이스케이프된 문자 처리
+                      const htmlCode = htmlMatch[1]
+                        .replace(/\\n/g, '\n')
+                        .replace(/\\"/g, '"')
+                        .replace(/\\t/g, '\t')
+                        .replace(/\\\\/g, '\\');
+
+                      console.log("[DEBUG] Setting streaming code, length:", htmlCode.length);
+                      setStreamingCode(htmlCode);
+                    } else {
+                      console.log("[DEBUG] HTML not matched yet");
+                    }
+                  } else if (data.type === "complete") {
                     setCurrentStatus("ready");
+                    setStreamingCode("");
                     // SSE에서 받은 파일로 즉시 업데이트
                     if (data.files) {
                       setFiles(data.files);
@@ -134,6 +161,7 @@ export default function ProjectWorkspace({ project }: { project: Project }) {
                     setTimeout(() => handleCaptureScreenshot(), 1000);
                   } else if (data.type === "error") {
                     setCurrentStatus("failed");
+                    setStreamingCode("");
                   }
                 } catch (e) {
                   if (e instanceof SyntaxError) continue;
@@ -216,13 +244,7 @@ export default function ProjectWorkspace({ project }: { project: Project }) {
   };
 
   if (currentStatus === "generating") {
-    return (
-      <div className="min-h-screen bg-black flex items-center justify-center">
-        <div className="text-center">
-          <MorphingSquare message="Generating..." />
-        </div>
-      </div>
-    );
+    return <CreatingModal isOpen={true} streamingCode={streamingCode} />;
   }
 
   if (currentStatus === "failed") {

@@ -44,7 +44,7 @@ export default function GeneratingModal({ isOpen }: GeneratingModalProps) {
         {/* Command Instructions */}
         <div className="bg-white/5 border border-[#D4A574] rounded-2xl p-6 max-w-lg mx-auto">
           <p className="text-white/80 text-sm mb-4">
-            Once downloaded, run these commands:
+            Once downloaded, run these commands
           </p>
 
           <div className="space-y-3">

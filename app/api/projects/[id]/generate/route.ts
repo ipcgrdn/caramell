@@ -76,7 +76,12 @@ export async function POST(
               result = value;
               break;
             }
-            // done이 아닐 때 value는 yield된 청크 (UI에 표시 안함)
+            // done이 아닐 때 value는 yield된 청크 (프론트엔드로 전송)
+            controller.enqueue(
+              encoder.encode(
+                `data: ${JSON.stringify({ type: "chunk", text: value })}\n\n`
+              )
+            );
           }
 
           if (!result) {
