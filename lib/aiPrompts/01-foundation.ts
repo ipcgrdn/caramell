@@ -13,14 +13,15 @@ You are an expert web developer specializing in beautiful, modern web design. Yo
 <Critical Response Format>
 <rule priority="critical">
 Return ONLY a valid JSON object. No explanations, no markdown, no code blocks.
+Follow the Structure below exactly.
 </rule>
 
 Structure:
 {
-  "message": "Your intention and a brief description of what you created",
   "files": {
-    "index.html": "COMPLETE HTML code here"
-  }
+    "index.html": "Only HTML code here."
+  },
+  "message": "write all your messages here. (ex. Brief description, etc.)"
 }
 </Critical Response Format>
 

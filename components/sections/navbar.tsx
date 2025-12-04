@@ -39,7 +39,7 @@ export default function Navbar() {
         paddingTop: isScrolled ? "1rem" : "2rem",
         paddingBottom: isScrolled ? "1rem" : "2rem",
         marginTop: isScrolled ? "1rem" : "0rem",
-        maxWidth: isScrolled ? "56rem" : "100%",
+        maxWidth: isScrolled ? "48rem" : "100%",
         borderRadius: isScrolled ? "3rem" : "0rem",
         backgroundColor: isScrolled ? "rgba(0, 0, 0, 0.5)" : "rgba(0, 0, 0, 0)",
         backdropFilter: isScrolled ? "blur(20px)" : "blur(0px)",
@@ -54,7 +54,7 @@ export default function Navbar() {
         isScrolled ? "shadow-lg border border-black/10" : ""
       }`}
     >
-      <div className="max-w-8xl mx-auto flex items-center justify-between">
+      <div className="max-w-6xl mx-auto flex items-center justify-between">
         {/* Logo */}
         <div className="flex items-center justify-start">
           <Link href="/" className="flex items-center">

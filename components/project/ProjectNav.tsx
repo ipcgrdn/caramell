@@ -1,6 +1,13 @@
 "use client";
 
 import { useRouter } from "next/navigation";
+import { toast } from "sonner";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 type ViewportSize = "desktop" | "tablet" | "mobile";
 
@@ -11,6 +18,9 @@ interface ProjectNavProps {
   onViewportChange?: (size: ViewportSize) => void;
   isChatOpen?: boolean;
   onChatToggle?: () => void;
+  projectId?: string;
+  files?: Record<string, string> | null;
+  onGenerateNextProject?: () => void;
 }
 
 export default function ProjectNav({
@@ -20,8 +30,50 @@ export default function ProjectNav({
   onViewportChange,
   isChatOpen = false,
   onChatToggle,
+  projectId,
+  files,
+  onGenerateNextProject,
 }: ProjectNavProps) {
   const router = useRouter();
+
+  // Export handlers
+  const handleCopyHTML = async () => {
+    if (!files || !files["index.html"]) {
+      toast.error("File not found");
+      return;
+    }
+
+    try {
+      await navigator.clipboard.writeText(files["index.html"]);
+      toast.success("HTML copied to clipboard!");
+    } catch (error) {
+      console.error("Failed to copy HTML:", error);
+      toast.error("Failed to copy HTML");
+    }
+  };
+
+  const handleDownloadHTML = () => {
+    if (!files || !files["index.html"]) {
+      toast.error("File not found");
+      return;
+    }
+
+    try {
+      const blob = new Blob([files["index.html"]], { type: "text/html" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `Caramell-project-${projectId || "export"}.html`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+      toast.success("File downloaded!");
+    } catch (error) {
+      console.error("Failed to download file:", error);
+      toast.error("Failed to download file");
+    }
+  };
 
   return (
     <nav className="h-10 flex items-center justify-between px-4 border-b border-white/20">
@@ -115,8 +167,8 @@ export default function ProjectNav({
               currentView !== "preview" || !onViewportChange
                 ? "text-white/60 cursor-not-allowed"
                 : viewportSize === "desktop"
-                  ? "bg-white/10 text-white"
-                  : "text-white/60 hover:text-white"
+                ? "bg-white/10 text-white"
+                : "text-white/60 hover:text-white"
             }`}
             aria-label="Desktop view"
           >
@@ -161,8 +213,8 @@ export default function ProjectNav({
               currentView !== "preview" || !onViewportChange
                 ? "text-white/60 cursor-not-allowed"
                 : viewportSize === "tablet"
-                  ? "bg-white/10 text-white"
-                  : "text-white/60 hover:text-white"
+                ? "bg-white/10 text-white"
+                : "text-white/60 hover:text-white"
             }`}
             aria-label="Tablet view"
           >
@@ -199,8 +251,8 @@ export default function ProjectNav({
               currentView !== "preview" || !onViewportChange
                 ? "text-white/60 cursor-not-allowed"
                 : viewportSize === "mobile"
-                  ? "bg-white/10 text-white"
-                  : "text-white/60 hover:text-white"
+                ? "bg-white/10 text-white"
+                : "text-white/60 hover:text-white"
             }`}
             aria-label="Mobile view"
           >
@@ -251,22 +303,105 @@ export default function ProjectNav({
           </svg>
           <span className="hidden md:block">Upgrade</span>
         </button>
-        <button className="px-2 py-1 bg-white hover:bg-[#D4A574] text-black text-xs rounded-lg transition-colors flex items-center gap-1.5">
-          <svg
-            className="w-3 h-3"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
+
+        {/* Export Dropdown */}
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <button className="px-2 py-1 bg-white hover:bg-[#D4A574] text-black text-xs rounded-lg transition-colors flex items-center gap-1.5">
+              <svg
+                className="w-3 h-3"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"
+                />
+              </svg>
+              <span className="hidden md:block">Export</span>
+            </button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent
+            align="end"
+            className="w-60 bg-white/90 backdrop-blur-md border border-black/15 rounded-2xl overflow-hidden shadow-lg"
           >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"
-            />
-          </svg>
-          <span className="hidden md:block">Export</span>
-        </button>
+            <DropdownMenuItem
+              onClick={handleCopyHTML}
+              className="cursor-pointer px-4 py-2 text-black/80 hover:bg-black/5 hover:text-black focus:bg-black/5 focus:text-black transition-colors flex items-center gap-3"
+            >
+              <svg
+                className="w-4 h-4"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"
+                />
+              </svg>
+              <div className="flex flex-col">
+                <span className="text-sm font-medium">Copy HTML</span>
+                <span className="text-xs text-black/60">Copy to clipboard</span>
+              </div>
+            </DropdownMenuItem>
+
+            <DropdownMenuItem
+              onClick={handleDownloadHTML}
+              className="cursor-pointer px-4 py-2 text-black/80 hover:bg-black/5 hover:text-black focus:bg-black/5 focus:text-black transition-colors flex items-center gap-3"
+            >
+              <svg
+                className="w-4 h-4"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+                />
+              </svg>
+              <div className="flex flex-col">
+                <span className="text-sm font-medium">Download HTML</span>
+                <span className="text-xs text-black/60">Save as HTML file</span>
+              </div>
+            </DropdownMenuItem>
+
+            <DropdownMenuItem
+              onClick={onGenerateNextProject}
+              className="cursor-pointer px-4 py-2 text-black/80 hover:bg-black/5 hover:text-black focus:bg-black/5 focus:text-black transition-colors flex items-center gap-3"
+            >
+              <svg
+                className="w-4 h-4"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"
+                />
+              </svg>
+              <div className="flex flex-col">
+                <span className="text-sm font-medium text-black">
+                  Download as Next.js
+                </span>
+                <span className="text-xs text-black/60">
+                  Download as complete project
+                </span>
+              </div>
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
 
         {/* Chat toggle button */}
         {onChatToggle && (

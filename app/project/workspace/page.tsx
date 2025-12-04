@@ -190,19 +190,18 @@ export default function WorkspacePage() {
   }
 
   return (
-    <div className="min-h-screen bg-neutral-900">
+    <div className="min-h-screen bg-[#D4A574]">
       <Navbar />
 
-      <div className="pt-28 md:pt-32 pb-20 px-6 md:px-8 lg:px-12">
+      <div className="pt-28 md:pt-32 pb-20">
         <div className="max-w-8xl mx-auto">
           {/* Header */}
-
-          <div className="flex items-center gap-4 max-w-4xl mx-auto mb-12">
+          <div className="flex items-center gap-2 md:gap-4 max-w-4xl mx-auto mb-12 px-4">
             {/* Search Bar */}
-            <div className="relative flex-1">
+            <div className="relative flex-1 group">
               <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
                 <svg
-                  className="w-4 h-4 md:h-5 md:w-5 text-white/50 z-10"
+                  className="w-4 h-4 md:h-5 md:w-5 text-black/60 group-focus-within:text-black transition-colors"
                   fill="none"
                   stroke="currentColor"
                   viewBox="0 0 24 24"
@@ -217,19 +216,19 @@ export default function WorkspacePage() {
               </div>
               <input
                 type="text"
-                placeholder="Search your projects..."
+                placeholder="Search your project"
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
-                className="w-full pl-12 pr-4 py-2 md:py-4 bg-white/5 rounded-2xl text-white text-sm md:text-base placeholder-white/40 focus:outline-none"
+                className="w-full pl-12 pr-4 py-2 md:py-4 bg-[#F5EDE3] rounded-2xl text-sm text-black placeholder-black/60 focus:outline-none"
               />
             </div>
 
             {/* Sort Button */}
             <button
               onClick={toggleSortOrder}
-              className="flex items-center gap-2 px-4 py-2 md:py-4 bg-white/5 rounded-2xl text-white/70 hover:text-white transition-all duration-300 whitespace-nowrap"
+              className="flex items-center gap-2 px-4 py-2 md:py-4 bg-[#F5EDE3] rounded-2xl text-black/80 hover:text-black"
             >
-              <span className="text-sm font-medium">Created</span>
+              <span className="text-sm font-medium">Date</span>
               {order === "asc" ? (
                 <svg
                   className="w-4 h-4"
@@ -268,16 +267,21 @@ export default function WorkspacePage() {
               <MorphingSquare />
             </div>
           ) : projects.length === 0 ? (
-            <div className="text-center py-32">
-              <h1 className="text-lg text-white/40">No projects found</h1>
+            <div className="flex flex-col items-center justify-center py-32 mx-8 rounded-4xl bg-[#F5EDE3]">
+              <h3 className="text-lg font-semibold text-black mb-2">
+                No projects found
+              </h3>
+              <p className="text-black/60 text-sm">
+                Create a new project to get started
+              </p>
             </div>
           ) : (
             <>
-              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+              <div className="mx-0 md:mx-8 px-6 md:px-8 py-10 rounded-4xl grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 bg-[#F5EDE3]">
                 {projects.map((project) => (
                   <div
                     key={project.id}
-                    className="group relative bg-white/5 hover:bg-white/10 rounded-2xl overflow-hidden"
+                    className="group relative rounded-2xl overflow-hidden bg-white/30 hover:bg-black/10 transition-all duration-300"
                   >
                     {/* Three Dots Menu */}
                     <div
@@ -286,7 +290,7 @@ export default function WorkspacePage() {
                     >
                       <button
                         onClick={() => toggleMenu(project.id)}
-                        className="p-2 rounded-full backdrop-blur-lg hover:bg-black/50 transition-all duration-300 opacity-0 group-hover:opacity-100"
+                        className="p-2 rounded-full bg-black/60 hover:bg-black/80 backdrop-blur-sm transition-all duration-300 opacity-0 group-hover:opacity-100"
                       >
                         <svg
                           className="w-5 h-5 text-white"
@@ -299,10 +303,10 @@ export default function WorkspacePage() {
 
                       {/* Dropdown Menu */}
                       {openMenuId === project.id && (
-                        <div className="absolute right-0 w-32 rounded-2xl bg-neutral-900/95 overflow-hidden z-30">
+                        <div className="absolute right-0 w-36 rounded-2xl bg-white/90 backdrop-blur-md border border-black/15 overflow-hidden z-30 shadow-lg">
                           <button
                             onClick={() => startEditing(project)}
-                            className="w-full px-4 py-3 text-left text-white hover:bg-white/10 transition-colors flex items-center gap-3 text-sm"
+                            className="w-full px-4 py-3 text-left text-black/80 hover:bg-black/5 hover:text-black transition-colors flex items-center gap-3 text-sm font-medium"
                           >
                             <svg
                               className="w-4 h-4"
@@ -324,7 +328,7 @@ export default function WorkspacePage() {
                               setDeleteConfirmId(project.id);
                               setOpenMenuId(null);
                             }}
-                            className="w-full px-4 py-3 text-left text-red-400 hover:bg-red-500/10 transition-colors flex items-center gap-3 text-sm"
+                            className="w-full px-4 py-3 text-left text-red-600 hover:bg-red-50 hover:text-red-700 transition-colors flex items-center gap-3 text-sm font-medium"
                           >
                             <svg
                               className="w-4 h-4"
@@ -379,7 +383,7 @@ export default function WorkspacePage() {
                     {/* Project Info */}
                     <div className="p-4">
                       {editingId === project.id ? (
-                        <div className="space-y-3">
+                        <div className="space-y-2">
                           <input
                             type="text"
                             value={editingName}
@@ -391,13 +395,13 @@ export default function WorkspacePage() {
                                 cancelEditing();
                               }
                             }}
-                            className="w-full px-2 py-2 bg-white/5 border border-white/10 rounded-lg text-white text-sm focus:outline-none focus:ring-2 focus:ring-[#D4A574]/50 focus:border-transparent"
+                            className="w-full px-3 py-2 bg-white/80 border border-black/20 rounded-xl text-black text-sm font-medium placeholder-black/40 focus:outline-none focus:border-black/50 focus:bg-white transition-all"
                             autoFocus
                           />
                           <div className="flex gap-2">
                             <button
                               onClick={cancelEditing}
-                              className="flex-1 px-3 py-2 bg-white/5 hover:bg-white/10 text-white text-xs font-medium rounded-lg transition-colors"
+                              className="flex-1 px-3 py-2 bg-white/60 hover:bg-white/80 border border-black/15 rounded-xl text-black/70 hover:text-black text-xs font-semibold transition-all duration-200"
                             >
                               Cancel
                             </button>
@@ -405,7 +409,7 @@ export default function WorkspacePage() {
                               onClick={() =>
                                 handleRename(project.id, editingName)
                               }
-                              className="flex-1 px-3 py-2 bg-white/20 hover:bg-white/30 text-white text-xs font-medium rounded-lg transition-colors"
+                              className="flex-1 px-3 py-2 bg-black/90 hover:bg-black border border-black rounded-xl text-white text-xs font-semibold transition-all duration-200"
                             >
                               Save
                             </button>
@@ -413,10 +417,10 @@ export default function WorkspacePage() {
                         </div>
                       ) : (
                         <>
-                          <h3 className="text-sm text-white mb-2 line-clamp-1">
+                          <h3 className="text-sm text-black mb-2 line-clamp-1">
                             {project.name || "Untitled"}
                           </h3>
-                          <p className="text-white/40 text-xs">
+                          <p className="text-black/60 text-xs">
                             {new Date(project.createdAt).toLocaleDateString(
                               "en-US",
                               {

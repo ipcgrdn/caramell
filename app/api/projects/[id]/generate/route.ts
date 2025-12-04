@@ -100,32 +100,26 @@ export async function POST(
             where: { projectId: id },
           });
 
-          const chatWrites: Promise<unknown>[] = [];
-
+          // user 메시지를 먼저 기록 (순서 보장)
           if (existingMessages === 0) {
-            chatWrites.push(
-              prisma.chatMessage.create({
-                data: {
-                  projectId: id,
-                  role: "user",
-                  content: project.prompt,
-                },
-              })
-            );
-          }
-
-          chatWrites.push(
-            prisma.chatMessage.create({
+            await prisma.chatMessage.create({
               data: {
                 projectId: id,
-                role: "assistant",
-                content: message,
-                filesChanged: Object.keys(files),
+                role: "user",
+                content: project.prompt,
               },
-            })
-          );
+            });
+          }
 
-          await Promise.all(chatWrites);
+          // assistant 메시지를 나중에 기록
+          await prisma.chatMessage.create({
+            data: {
+              projectId: id,
+              role: "assistant",
+              content: message,
+              filesChanged: Object.keys(files),
+            },
+          });
 
           // 6. 완료 알림
           controller.enqueue(

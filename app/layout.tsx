@@ -80,7 +80,7 @@ export default function RootLayout({
         <body
           className={`${geistSans.variable} ${playfair.variable} antialiased`}
         >
-          <Toaster position="bottom-right" richColors />
+          <Toaster position="bottom-right" />
           {children}
         </body>
       </html>

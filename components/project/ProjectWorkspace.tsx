@@ -3,11 +3,13 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { useIsMobile } from "@/hooks/use-media-query";
+import { toast } from "sonner";
 
 import ProjectNav from "./ProjectNav";
 import ProjectCode from "./ProjectCode";
 import ProjectScreen from "./ProjectScreen";
 import ProjectChat from "./ProjectChat";
+import GeneratingModal from "./GeneratingModal";
 
 import { MorphingSquare } from "../ui/morphing-square";
 import { captureAndUploadScreenshot } from "@/lib/screenshot";
@@ -25,9 +27,11 @@ interface Project {
 export default function ProjectWorkspace({ project }: { project: Project }) {
   const router = useRouter();
   const isMobile = useIsMobile();
-  
+
   const [currentStatus, setCurrentStatus] = useState(project.status);
-  const [files, setFiles] = useState<Record<string, string> | null>(project.files);
+  const [files, setFiles] = useState<Record<string, string> | null>(
+    project.files
+  );
 
   const getStorageKey = (key: string) => `project_${project.id}_${key}`;
 
@@ -37,6 +41,7 @@ export default function ProjectWorkspace({ project }: { project: Project }) {
   >("desktop");
   const [isChatOpen, setIsChatOpen] = useState<boolean>(!isMobile);
   const [chatWidth, setChatWidth] = useState(400);
+  const [isGeneratingNextJs, setIsGeneratingNextJs] = useState(false);
 
   useEffect(() => {
     const savedView = localStorage.getItem(getStorageKey("currentView"));
@@ -167,6 +172,49 @@ export default function ProjectWorkspace({ project }: { project: Project }) {
     document.addEventListener("mouseup", handleMouseUp);
   };
 
+  const handleGenerateNextProject = async () => {
+    if (!files || !files["index.html"]) {
+      toast.error("File not found");
+      return;
+    }
+
+    setIsGeneratingNextJs(true);
+
+    try {
+      const response = await fetch(`/api/projects/${project.id}/export`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          htmlContent: files["index.html"],
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to generate project");
+      }
+
+      // Get ZIP file as blob
+      const blob = await response.blob();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `Caramell-NextJS-${project.id}.zip`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+
+      toast.success("Next.js project downloaded!");
+    } catch (error) {
+      console.error("Failed to generate Next.js project:", error);
+      toast.error("Failed to generate Next.js project");
+    } finally {
+      setIsGeneratingNextJs(false);
+    }
+  };
+
   if (currentStatus === "generating") {
     return (
       <div className="min-h-screen bg-black flex items-center justify-center">
@@ -200,6 +248,9 @@ export default function ProjectWorkspace({ project }: { project: Project }) {
 
   return (
     <div className="h-screen flex flex-col bg-black">
+      {/* Generating Modal */}
+      <GeneratingModal isOpen={isGeneratingNextJs} />
+
       {/* Nav */}
       <ProjectNav
         currentView={currentView}
@@ -208,6 +259,9 @@ export default function ProjectWorkspace({ project }: { project: Project }) {
         onViewportChange={setViewportSize}
         isChatOpen={isChatOpen}
         onChatToggle={() => setIsChatOpen(!isChatOpen)}
+        projectId={project.id}
+        files={files}
+        onGenerateNextProject={handleGenerateNextProject}
       />
 
       {/* Main content */}
