@@ -127,28 +127,22 @@ export default function ProjectWorkspace({ project }: { project: Project }) {
                   const data = JSON.parse(line.slice(6));
 
                   if (data.type === "chunk") {
-                    console.log("[DEBUG] Received chunk:", data.text?.substring(0, 100));
-
                     // 스트리밍 텍스트 누적
                     accumulatedText += data.text;
-                    console.log("[DEBUG] Accumulated length:", accumulatedText.length);
 
                     // HTML 코드 부분만 추출 (콜론 앞뒤 공백 허용)
-                    const htmlMatch = accumulatedText.match(/"index\.html"\s*:\s*"([\s\S]*?)(?:"}}|$)/);
+                    const htmlMatch = accumulatedText.match(
+                      /"index\.html"\s*:\s*"([\s\S]*?)(?:"}}|$)/
+                    );
                     if (htmlMatch) {
-                      console.log("[DEBUG] HTML matched! Length:", htmlMatch[1].length);
-
                       // 이스케이프된 문자 처리
                       const htmlCode = htmlMatch[1]
-                        .replace(/\\n/g, '\n')
+                        .replace(/\\n/g, "\n")
                         .replace(/\\"/g, '"')
-                        .replace(/\\t/g, '\t')
-                        .replace(/\\\\/g, '\\');
+                        .replace(/\\t/g, "\t")
+                        .replace(/\\\\/g, "\\");
 
-                      console.log("[DEBUG] Setting streaming code, length:", htmlCode.length);
                       setStreamingCode(htmlCode);
-                    } else {
-                      console.log("[DEBUG] HTML not matched yet");
                     }
                   } else if (data.type === "complete") {
                     setCurrentStatus("ready");
@@ -157,7 +151,6 @@ export default function ProjectWorkspace({ project }: { project: Project }) {
                     if (data.files) {
                       setFiles(data.files);
                     }
-
                     setTimeout(() => handleCaptureScreenshot(), 1000);
                   } else if (data.type === "error") {
                     setCurrentStatus("failed");
