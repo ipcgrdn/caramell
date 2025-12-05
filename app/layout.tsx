@@ -5,6 +5,12 @@ import { dark } from "@clerk/themes";
 import { Toaster } from "sonner";
 import "./globals.css";
 
+import Script from "next/script";
+import { Analytics } from "@vercel/analytics/next";
+import { SpeedInsights } from "@vercel/speed-insights/next";
+
+const GA_TRACKING_ID = "G-D0Q1T5F7QG";
+
 const geistSans = Geist({
   variable: "--font-geist-sans",
   subsets: ["latin"],
@@ -20,6 +26,9 @@ const playfair = Playfair_Display({
 export const metadata: Metadata = {
   title: "Caramell",
   description: "Caramell",
+  other: {
+    "naver-site-verification": "8f41ec33a381cd639f7e8e6edd91106b76f09f5d",
+  },
 };
 
 export default function RootLayout({
@@ -77,11 +86,27 @@ export default function RootLayout({
       }}
     >
       <html lang="en">
+        <head>
+          <Script
+            src={`https://www.googletagmanager.com/gtag/js?id=${GA_TRACKING_ID}`}
+            strategy="afterInteractive"
+          />
+          <Script id="gtag-init" strategy="afterInteractive">
+            {`
+              window.dataLayer = window.dataLayer || [];
+              function gtag(){dataLayer.push(arguments);}
+              gtag('js', new Date());
+              gtag('config', '${GA_TRACKING_ID}');
+            `}
+          </Script>
+        </head>
         <body
           className={`${geistSans.variable} ${playfair.variable} antialiased`}
         >
           <Toaster position="bottom-right" />
           {children}
+          <Analytics />
+          <SpeedInsights />
         </body>
       </html>
     </ClerkProvider>
