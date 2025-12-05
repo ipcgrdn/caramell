@@ -5,6 +5,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import Link from "next/link";
 
 import Navbar from "@/components/sections/navbar";
+import Footer from "@/components/sections/footer";
 
 interface PricingTier {
   name: string;
@@ -315,6 +316,8 @@ export default function PricingPage() {
           </motion.div>
         </div>
       </div>
+
+      <Footer />
     </div>
   );
 }
