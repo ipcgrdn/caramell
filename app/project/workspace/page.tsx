@@ -267,7 +267,7 @@ export default function WorkspacePage() {
               <MorphingSquare />
             </div>
           ) : projects.length === 0 ? (
-            <div className="flex flex-col items-center justify-center py-32 mx-8 rounded-4xl bg-[#F5EDE3]">
+            <div className="flex flex-col items-center justify-center py-32 mx-auto rounded-4xl bg-[#F5EDE3] max-w-6xl">
               <h3 className="text-lg font-semibold text-black mb-2">
                 No projects found
               </h3>

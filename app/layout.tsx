@@ -24,8 +24,32 @@ const playfair = Playfair_Display({
 });
 
 export const metadata: Metadata = {
+  metadataBase: new URL("https://caramell.app"),
   title: "Caramell",
-  description: "Caramell",
+  description: "Caramell - Beautiful Landing Page",
+  icons: {
+    icon: "/caramell.png",
+    apple: "/caramell.png",
+  },
+  openGraph: {
+    title: "Caramell",
+    description: "Caramell - Beautiful Landing Page",
+    images: [
+      {
+        url: "/caramell.png",
+        width: 100,
+        height: 100,
+        alt: "Caramell Logo",
+      },
+    ],
+    type: "website",
+  },
+  twitter: {
+    card: "summary",
+    title: "Caramell",
+    description: "Caramell - Beautiful Landing Page",
+    images: ["/caramell.png"],
+  },
   other: {
     "naver-site-verification": "8f41ec33a381cd639f7e8e6edd91106b76f09f5d",
   },

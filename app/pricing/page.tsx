@@ -169,7 +169,7 @@ export default function PricingPage() {
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, delay: 0.1 }}
-            className="grid grid-cols-2 gap-4 mb-20"
+            className="grid grid-cols-1 md:grid-cols-2 gap-8 md:gap-4 mb-20"
           >
             {pricingTiers.map((tier, index) => (
               <motion.div
@@ -261,7 +261,7 @@ export default function PricingPage() {
                         d="M5 13l4 4L19 7"
                       />
                     </svg>
-                    <span className="text-black/70">{feature}</span>
+                    <span className="text-black/70 text-sm md:text-lg">{feature}</span>
                   </div>
                 ))}
               </div>
@@ -294,25 +294,6 @@ export default function PricingPage() {
                 />
               ))}
             </div>
-          </motion.div>
-
-          {/* Bottom CTA */}
-          <motion.div
-            initial={{ opacity: 0, y: 30 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, delay: 0.6 }}
-            className="text-center mt-24 mb-20 md:mt-32"
-          >
-            <h2 className="text-4xl md:text-6xl font-extrabold text-[#F5EDE3] mb-4 leading-tight">
-              Still not sure?{" "}
-              <span className="text-[#F5EDE3]">Try it free!</span>
-            </h2>
-            <Link
-              href="/signup"
-              className="inline-flex items-center gap-2 px-10 py-4 bg-[#D4A574] hover:bg-[#c49564] text-black text-lg font-medium rounded-full transition-all"
-            >
-              Get Started
-            </Link>
           </motion.div>
         </div>
       </div>

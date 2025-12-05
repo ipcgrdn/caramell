@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { SignedIn, SignedOut, UserButton } from "@clerk/nextjs";
 import { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
@@ -54,11 +55,18 @@ export default function Navbar() {
         isScrolled ? "shadow-lg border border-black/10" : ""
       }`}
     >
-      <div className="max-w-6xl mx-auto flex items-center justify-between">
-        {/* Logo */}
-        <div className="flex items-center justify-start">
-          <Link href="/" className="flex items-center">
-            <span className="hover:text-[#D4A574] transition-colors font-playfair font-bold text-lg">
+      <div className="max-w-6xl mx-auto flex items-center">
+        {/* Logo - 왼쪽 고정 */}
+        <div className="flex-1 flex items-center justify-start">
+          <Link href="/" className="flex items-center gap-2 group">
+            <Image
+              src="/caramell.svg"
+              alt="Caramell Logo"
+              width={24}
+              height={24}
+              className="rounded-md"
+            />
+            <span className="group-hover:text-[#D4A574] transition-colors font-playfair font-bold text-lg tracking-tighter">
               Caramell
             </span>
           </Link>
@@ -67,8 +75,8 @@ export default function Navbar() {
         {/* Desktop Navigation */}
         {!isMobile && (
           <>
-            {/* Center - Navigation Links */}
-            <div className="flex items-center justify-center gap-8">
+            {/* Center - Navigation Links 중앙 고정 */}
+            <div className="flex-1 flex items-center justify-center gap-8">
               <Link
                 href="/blog"
                 className="hover:text-[#D4A574] transition-colors text-sm font-medium"
@@ -89,8 +97,8 @@ export default function Navbar() {
               </Link>
             </div>
 
-            {/* Right - Auth Buttons */}
-            <div className="flex items-center justify-end">
+            {/* Right - Auth Buttons 오른쪽 고정 */}
+            <div className="flex-1 flex items-center justify-end">
               <SignedOut>
                 <div className="flex items-center gap-3">
                   <Link
