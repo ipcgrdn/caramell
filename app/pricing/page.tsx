@@ -37,7 +37,7 @@ const pricingTiers: PricingTier[] = [
     highlight: true,
   },
   {
-    name: "Business",
+    name: "Ultra",
     price: "$50",
     credits: 250,
     bonus: "+10%",
