@@ -2,7 +2,8 @@
 
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { toast } from "sonner";
 
 import Navbar from "@/components/sections/navbar";
 import Footer from "@/components/sections/footer";
@@ -20,7 +21,7 @@ const pricingTiers: PricingTier[] = [
   {
     name: "Free",
     price: "$0",
-    credits: 3,
+    credits: 1,
     description: "Try it out",
   },
   {
@@ -142,6 +143,39 @@ function FAQItem({
 
 export default function PricingPage() {
   const [openFAQ, setOpenFAQ] = useState<number | null>(null);
+  const [loadingPlan, setLoadingPlan] = useState<string | null>(null);
+  const router = useRouter();
+
+  const handlePurchase = async (planName: string) => {
+    if (planName === "Free") {
+      router.push("/signin");
+      return;
+    }
+
+    setLoadingPlan(planName);
+
+    try {
+      const response = await fetch("/api/checkout", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ plan: planName.toLowerCase() }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || "Failed to create checkout session");
+      }
+
+      window.location.href = data.checkoutUrl;
+    } catch (error) {
+      console.error("Payment error:", error);
+      toast.error("Payment failed. Please try again.");
+      setLoadingPlan(null);
+    }
+  };
 
   return (
     <div className="min-h-screen bg-[#6B4E36]">
@@ -215,16 +249,21 @@ export default function PricingPage() {
                 </div>
 
                 {/* CTA */}
-                <Link
-                  href="/signup"
-                  className={`block w-full py-3 rounded-2xl text-center font-medium transition-all ${
+                <button
+                  onClick={() => handlePurchase(tier.name)}
+                  disabled={loadingPlan !== null}
+                  className={`block w-full py-3 rounded-2xl text-center font-medium transition-all disabled:opacity-50 disabled:cursor-not-allowed ${
                     tier.highlight
                       ? "bg-black text-white hover:bg-black/90"
                       : "bg-[#6B4E36] text-white hover:bg-[#5a4230]"
                   }`}
                 >
-                  {tier.name === "Free" ? "Start Free" : "Buy Credits"}
-                </Link>
+                  {loadingPlan === tier.name
+                    ? "Processing..."
+                    : tier.name === "Free"
+                    ? "Start Free"
+                    : "Buy Credits"}
+                </button>
               </motion.div>
             ))}
           </motion.div>
@@ -261,7 +300,9 @@ export default function PricingPage() {
                         d="M5 13l4 4L19 7"
                       />
                     </svg>
-                    <span className="text-black/70 text-sm md:text-lg">{feature}</span>
+                    <span className="text-black/70 text-sm md:text-lg">
+                      {feature}
+                    </span>
                   </div>
                 ))}
               </div>

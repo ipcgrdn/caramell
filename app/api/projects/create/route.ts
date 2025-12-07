@@ -1,6 +1,7 @@
 import { auth } from "@clerk/nextjs/server";
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
+import { AIModel, getModelCredits } from "@/lib/aiTypes";
 
 export async function POST(req: Request) {
   try {
@@ -21,7 +22,7 @@ export async function POST(req: Request) {
 
     // Validate AI model
     const validModels = ["claude", "chatgpt", "gemini"];
-    const selectedModel = aiModel && validModels.includes(aiModel) ? aiModel : "gemini";
+    const selectedModel = (aiModel && validModels.includes(aiModel) ? aiModel : "gemini") as AIModel;
 
     // Find user in database
     const user = await prisma.user.findUnique({
@@ -30,6 +31,15 @@ export async function POST(req: Request) {
 
     if (!user) {
       return NextResponse.json({ error: "User not found" }, { status: 404 });
+    }
+
+    // 크레딧 검사
+    const requiredCredits = getModelCredits(selectedModel);
+    if (user.credits < requiredCredits) {
+      return NextResponse.json(
+        { error: "Insufficient credits", code: "INSUFFICIENT_CREDITS" },
+        { status: 402 }
+      );
     }
 
     // Create project (status: generating) with attached files

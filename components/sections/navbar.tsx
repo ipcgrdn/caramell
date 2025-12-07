@@ -7,6 +7,7 @@ import { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useIsMobile } from "@/hooks/use-media-query";
 import { Menu, X, Briefcase } from "lucide-react";
+import CreditDropdown from "@/components/sections/credit";
 
 export default function Navbar() {
   const [isScrolled, setIsScrolled] = useState(false);
@@ -116,15 +117,18 @@ export default function Navbar() {
                 </div>
               </SignedOut>
               <SignedIn>
-                <UserButton>
-                  <UserButton.MenuItems>
-                    <UserButton.Link
-                      label="Workspace"
-                      href="/project/workspace"
-                      labelIcon={<Briefcase className="w-4 h-4" />}
-                    />
-                  </UserButton.MenuItems>
-                </UserButton>
+                <div className="flex items-center gap-2 md:gap-4">
+                  <CreditDropdown />
+                  <UserButton>
+                    <UserButton.MenuItems>
+                      <UserButton.Link
+                        label="Workspace"
+                        href="/project/workspace"
+                        labelIcon={<Briefcase className="w-4 h-4" />}
+                      />
+                    </UserButton.MenuItems>
+                  </UserButton>
+                </div>
               </SignedIn>
             </div>
           </>
@@ -132,8 +136,14 @@ export default function Navbar() {
 
         {/* Mobile Hamburger Menu */}
         {isMobile && (
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2">
+            <SignedOut>
+              <Link href="/signin" className="px-3 py-1.5 text-sm font-medium">
+                Log in
+              </Link>
+            </SignedOut>
             <SignedIn>
+              <CreditDropdown />
               <UserButton>
                 <UserButton.MenuItems>
                   <UserButton.Link
@@ -195,24 +205,15 @@ export default function Navbar() {
                 </Link>
               </div>
 
-              {/* Auth Buttons - SignedOut Only */}
+              {/* Sign up Button - SignedOut Only */}
               <SignedOut>
-                <div className="flex flex-col space-y-2">
-                  <Link
-                    href="/signin"
-                    onClick={() => setIsMobileMenuOpen(false)}
-                    className="w-full px-4 py-2 text-center text-lg font-medium rounded-lg bg-white/10 hover:bg-white/20 transition-all"
-                  >
-                    Log in
-                  </Link>
-                  <Link
-                    href="/signup"
-                    onClick={() => setIsMobileMenuOpen(false)}
-                    className="w-full px-4 py-2 text-center text-lg font-medium bg-black hover:bg-[#D4A574] rounded-lg transition-colors"
-                  >
-                    Sign up
-                  </Link>
-                </div>
+                <Link
+                  href="/signup"
+                  onClick={() => setIsMobileMenuOpen(false)}
+                  className="w-full px-4 py-2 text-center text-base font-medium bg-[#D4A574] hover:bg-[#c49664] text-black rounded-xl transition-colors"
+                >
+                  Sign up
+                </Link>
               </SignedOut>
             </div>
           </motion.div>

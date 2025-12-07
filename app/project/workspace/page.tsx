@@ -108,7 +108,14 @@ export default function WorkspacePage() {
         if (reset) {
           setProjects(data.projects || []);
         } else {
-          setProjects((prev) => [...prev, ...(data.projects || [])]);
+          setProjects((prev) => {
+            const newProjects = data.projects || [];
+            const existingIds = new Set(prev.map((p) => p.id));
+            const uniqueNewProjects = newProjects.filter(
+              (p: Project) => !existingIds.has(p.id)
+            );
+            return [...prev, ...uniqueNewProjects];
+          });
         }
 
         setPagination(data.pagination);

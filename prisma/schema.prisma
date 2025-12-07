@@ -14,18 +14,34 @@ datasource db {
 }
 
 model User {
-  id        String    @id @default(cuid())
-  clerkId   String    @unique
-  email     String    @unique
-  firstName String?
-  lastName  String?
-  imageUrl  String?
-  createdAt DateTime  @default(now())
-  updatedAt DateTime  @updatedAt
-  projects  Project[]
+  id           String        @id @default(cuid())
+  clerkId      String        @unique
+  email        String        @unique
+  firstName    String?
+  lastName     String?
+  imageUrl     String?
+  credits      Int           @default(1)
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+  projects     Project[]
+  transactions Transaction[]
 
   @@index([clerkId])
   @@index([email])
+}
+
+model Transaction {
+  id            String   @id @default(cuid())
+  userId        String
+  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  credits       Int
+  amount        Int      // 센트 단위 (e.g. $10 = 1000)
+  plan          String   // "starter" | "pro" | "ultra"
+  dodoPaymentId String   @unique
+  createdAt     DateTime @default(now())
+
+  @@index([userId])
+  @@index([dodoPaymentId])
 }
 
 model Project {

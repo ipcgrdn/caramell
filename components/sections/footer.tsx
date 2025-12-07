@@ -31,12 +31,6 @@ export default function Footer() {
           {/* Navigation Links */}
           <div className="flex flex-wrap items-center justify-center gap-6">
             <Link
-              href="/pricing"
-              className="text-sm text-black/60 hover:text-black transition-colors"
-            >
-              Pricing
-            </Link>
-            <Link
               href="/privacy"
               className="text-sm text-black/60 hover:text-black transition-colors"
             >

@@ -2,7 +2,7 @@ import { auth } from "@clerk/nextjs/server";
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 
-import { AIModel, ChatMessage } from "@/lib/aiTypes";
+import { AIModel, ChatMessage, getModelCredits } from "@/lib/aiTypes";
 import { chatWithAI } from "@/lib/aiChat";
 
 // 중단된 요청 ID를 추적하는 Set (5분 후 자동 정리)
@@ -122,6 +122,16 @@ export async function POST(
         ? aiModel
         : (project.aiModel as AIModel) || "gemini";
 
+    // 크레딧 체크
+    const requiredCredits = getModelCredits(selectedModel as AIModel);
+
+    if (user.credits < requiredCredits) {
+      return NextResponse.json(
+        { error: "Insufficient credits", code: "INSUFFICIENT_CREDITS" },
+        { status: 402 }
+      );
+    }
+
     // Get chat history before saving new message
     const previousMessages = await prisma.chatMessage.findMany({
       where: { projectId: id },
@@ -190,16 +200,24 @@ export async function POST(
         );
       }
 
-      // Save assistant message to database
-      await prisma.chatMessage.create({
-        data: {
-          projectId: id,
-          role: "assistant",
-          content: result.response,
-          filesChanged: filesChanged.length > 0 ? filesChanged : undefined,
-          aiModel: selectedModel,
-        },
-      });
+      // Save assistant message + 크레딧 차감
+      await prisma.$transaction([
+        prisma.chatMessage.create({
+          data: {
+            projectId: id,
+            role: "assistant",
+            content: result.response,
+            filesChanged: filesChanged.length > 0 ? filesChanged : undefined,
+            aiModel: selectedModel,
+          },
+        }),
+        prisma.user.update({
+          where: { id: user.id },
+          data: {
+            credits: { decrement: requiredCredits },
+          },
+        }),
+      ]);
 
       return NextResponse.json({
         response: result.response,

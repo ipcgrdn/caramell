@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { MorphingSquare } from "../ui/morphing-square";
 import { AIModel, AI_MODELS } from "@/lib/aiTypes";
@@ -34,6 +35,7 @@ export default function ProjectChat({
   projectId,
   onFilesUpdate,
 }: ProjectChatProps) {
+  const router = useRouter();
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
@@ -138,13 +140,27 @@ export default function ProjectChat({
         signal: abortController.signal,
       });
 
-      if (!response.ok) throw new Error("Failed to get response");
+      if (!response.ok) {
+        // 크레딧 부족 에러 처리
+        if (response.status === 402) {
+          toast.error("Not enough credits", {
+            action: {
+              label: "Buy Credits",
+              onClick: () => router.push("/pricing"),
+            },
+          });
+          return;
+        }
+        throw new Error("Failed to get response");
+      }
 
       const data = await response.json();
 
       // 최신 요청이 아니면 무시 (이중 검증: 클라이언트 & 서버)
-      if (latestRequestIdRef.current !== requestId || data.requestId !== requestId) {
-        console.log("Ignoring outdated response");
+      if (
+        latestRequestIdRef.current !== requestId ||
+        data.requestId !== requestId
+      ) {
         return;
       }
 
@@ -651,7 +667,7 @@ export default function ProjectChat({
                     </DropdownMenuTrigger>
                     <DropdownMenuContent
                       align="start"
-                      className="w-[200px] border-white/8 p-2"
+                      className="w-[220px] bg-black border-white/5 p-2"
                     >
                       {AI_MODELS.map((model) => (
                         <DropdownMenuItem
@@ -661,8 +677,19 @@ export default function ProjectChat({
                         >
                           <div className="mt-0.5">{ModelIcons[model.id]}</div>
                           <div className="flex-1">
-                            <div className="text-white text-xs font-medium">
-                              {model.name}
+                            <div className="flex items-center gap-2">
+                              <span className="text-white text-xs font-medium">
+                                {model.name}
+                              </span>
+                              {model.badge && (
+                                <span className="px-1.5 py-0.5 bg-[#D4A574]/20 text-[#D4A574] text-[10px] font-medium rounded-sm">
+                                  {model.badge}
+                                </span>
+                              )}
+                            </div>
+                            <div className="text-white/50 text-[10px] mt-0.5">
+                              {model.credits} credit
+                              {model.credits > 1 ? "s" : ""} per use
                             </div>
                           </div>
                         </DropdownMenuItem>

@@ -1,7 +1,7 @@
 import { auth } from "@clerk/nextjs/server";
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
-import { AIModel } from "@/lib/aiTypes";
+import { AIModel, getModelCredits } from "@/lib/aiTypes";
 import { generateLandingPageStream } from "@/lib/aiGenerator";
 
 export const runtime = "nodejs";
@@ -39,6 +39,17 @@ export async function POST(
 
     if (!project) {
       return NextResponse.json({ error: "Project not found" }, { status: 404 });
+    }
+
+    // 크레딧 체크
+    const aiModel = (project.aiModel as AIModel) || "gemini";
+    const requiredCredits = getModelCredits(aiModel);
+
+    if (user.credits < requiredCredits) {
+      return NextResponse.json(
+        { error: "Insufficient credits", code: "INSUFFICIENT_CREDITS" },
+        { status: 402 }
+      );
     }
 
     // 스트리밍 응답 시작
@@ -90,15 +101,23 @@ export async function POST(
 
           const { files, message } = result;
 
-          // 4. DB에 저장
-          await prisma.project.update({
-            where: { id },
-            data: {
-              files,
-              status: "ready",
-              name: project.name || extractTitleFromPrompt(project.prompt),
-            },
-          });
+          // 4. DB에 저장 + 크레딧 차감
+          await prisma.$transaction([
+            prisma.project.update({
+              where: { id },
+              data: {
+                files,
+                status: "ready",
+                name: project.name || extractTitleFromPrompt(project.prompt),
+              },
+            }),
+            prisma.user.update({
+              where: { id: user.id },
+              data: {
+                credits: { decrement: requiredCredits },
+              },
+            }),
+          ]);
 
           // 5. 채팅 기록에 저장
           const existingMessages = await prisma.chatMessage.count({

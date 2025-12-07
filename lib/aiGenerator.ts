@@ -30,8 +30,6 @@ export async function* generateLandingPageStream(
     }
   })();
 
-  // 아래의 console.log는 추후 제거 예정
-
   let finalResult: GenerationResult = { files: {}, message: "" };
 
   while (true) {

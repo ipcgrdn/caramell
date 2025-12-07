@@ -67,6 +67,18 @@ export default function PromptInput() {
         }),
       });
 
+      // 크레딧 부족 에러 처리
+      if (response.status === 402) {
+        toast.error("Not enough credits", {
+          action: {
+            label: "Buy Credits",
+            onClick: () => router.push("/pricing"),
+          },
+        });
+        setIsLoading(false);
+        return;
+      }
+
       const data = await response.json();
 
       if (data.success && data.projectId) {
@@ -367,7 +379,7 @@ export default function PromptInput() {
             </DropdownMenuTrigger>
             <DropdownMenuContent
               align="start"
-              className="w-[200px] border-white/10 p-2"
+              className="w-[220px] border-white/10 p-2"
             >
               {AI_MODELS.map((model) => (
                 <DropdownMenuItem
@@ -377,8 +389,19 @@ export default function PromptInput() {
                 >
                   <div className="mt-0.5">{ModelIcons[model.id]}</div>
                   <div className="flex-1">
-                    <div className="text-white text-xs font-medium">
-                      {model.name}
+                    <div className="flex items-center gap-2">
+                      <span className="text-white text-xs font-medium">
+                        {model.name}
+                      </span>
+                      {model.badge && (
+                        <span className="px-1.5 py-0.5 bg-[#D4A574]/20 text-[#D4A574] text-[10px] font-medium rounded-sm">
+                          {model.badge}
+                        </span>
+                      )}
+                    </div>
+                    <div className="text-white/50 text-[10px] mt-0.5">
+                      {model.credits} credit{model.credits > 1 ? "s" : ""} per
+                      use
                     </div>
                   </div>
                 </DropdownMenuItem>

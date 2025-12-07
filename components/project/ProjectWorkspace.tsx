@@ -103,6 +103,17 @@ export default function ProjectWorkspace({ project }: { project: Project }) {
           });
 
           if (!response.ok) {
+            // 크레딧 부족 에러 처리
+            if (response.status === 402) {
+              toast.error("Not enough credits", {
+                action: {
+                  label: "Buy Credits",
+                  onClick: () => router.push("/pricing"),
+                },
+              });
+              setCurrentStatus("failed");
+              return;
+            }
             throw new Error("Failed to start generation");
           }
 

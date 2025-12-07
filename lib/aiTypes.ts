@@ -5,23 +5,34 @@ export type AIModel = "claude" | "chatgpt" | "gemini";
 export interface AIModelConfig {
   id: AIModel;
   name: string;
+  credits: number;
   badge?: string;
 }
 
 export const AI_MODELS: AIModelConfig[] = [
   {
-    id: "claude",
-    name: "Claude 4.5 Opus",
-  },
-  {
     id: "gemini",
     name: "Gemini 3 Pro",
+    credits: 1,
+    badge: "Recommend",
   },
   {
     id: "chatgpt",
     name: "GPT-5.1",
+    credits: 1,
+  },
+  {
+    id: "claude",
+    name: "Claude Opus 4.5",
+    credits: 2,
   },
 ];
+
+// 모델별 크레딧 비용 조회
+export function getModelCredits(model: AIModel): number {
+  const config = AI_MODELS.find((m) => m.id === model);
+  return config?.credits ?? 1;
+}
 
 // 파일 시스템 인터페이스
 export interface FileSystem {
