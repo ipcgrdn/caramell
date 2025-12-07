@@ -43,6 +43,7 @@ export default function ProjectWorkspace({ project }: { project: Project }) {
   const [chatWidth, setChatWidth] = useState(400);
   const [isGeneratingNextJs, setIsGeneratingNextJs] = useState(false);
   const [streamingCode, setStreamingCode] = useState<string>("");
+  const [previewKey, setPreviewKey] = useState(0);
 
   useEffect(() => {
     const savedView = localStorage.getItem(getStorageKey("currentView"));
@@ -224,6 +225,16 @@ export default function ProjectWorkspace({ project }: { project: Project }) {
       });
 
       if (!response.ok) {
+        // 크레딧 부족 에러 처리
+        if (response.status === 402) {
+          toast.error("Not enough credits", {
+            action: {
+              label: "Buy Credits",
+              onClick: () => router.push("/pricing"),
+            },
+          });
+          return;
+        }
         throw new Error("Failed to generate project");
       }
 
@@ -288,6 +299,7 @@ export default function ProjectWorkspace({ project }: { project: Project }) {
         projectId={project.id}
         files={files}
         onGenerateNextProject={handleGenerateNextProject}
+        onRefreshPreview={() => setPreviewKey((prev) => prev + 1)}
       />
 
       {/* Main content */}
@@ -308,7 +320,11 @@ export default function ProjectWorkspace({ project }: { project: Project }) {
 
           {/* Preview 뷰 - 항상 렌더링 (Code 뷰일 때는 숨김) */}
           <div className={currentView === "preview" ? "h-full" : "hidden"}>
-            <ProjectScreen files={files} viewportSize={viewportSize} />
+            <ProjectScreen
+              key={previewKey}
+              files={files}
+              viewportSize={viewportSize}
+            />
           </div>
         </div>
 

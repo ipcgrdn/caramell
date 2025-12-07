@@ -40,6 +40,14 @@ export async function POST(
       return NextResponse.json({ error: "Project not found" }, { status: 404 });
     }
 
+    const requiredCredits = 1;
+    if (user.credits < requiredCredits) {
+      return NextResponse.json(
+        { error: "Insufficient credits", code: "INSUFFICIENT_CREDITS" },
+        { status: 402 }
+      );
+    }
+
     // Get HTML content from request
     const { htmlContent } = await req.json();
 
@@ -63,6 +71,14 @@ export async function POST(
 
     // Generate ZIP buffer as ArrayBuffer to satisfy NextResponse body types
     const zipBuffer = await zip.generateAsync({ type: "arraybuffer" });
+
+    // 크레딧 차감
+    await prisma.user.update({
+      where: { id: user.id },
+      data: {
+        credits: { decrement: requiredCredits },
+      },
+    });
 
     // Return ZIP file
     return new NextResponse(zipBuffer, {

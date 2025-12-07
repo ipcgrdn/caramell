@@ -2,6 +2,8 @@
 
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
+import { useState, useEffect } from "react";
+import Link from "next/link";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -21,6 +23,7 @@ interface ProjectNavProps {
   projectId?: string;
   files?: Record<string, string> | null;
   onGenerateNextProject?: () => void;
+  onRefreshPreview?: () => void;
 }
 
 export default function ProjectNav({
@@ -33,8 +36,29 @@ export default function ProjectNav({
   projectId,
   files,
   onGenerateNextProject,
+  onRefreshPreview,
 }: ProjectNavProps) {
   const router = useRouter();
+  const [credits, setCredits] = useState<number | null>(null);
+  const [isLoadingCredits, setIsLoadingCredits] = useState(true);
+
+  useEffect(() => {
+    const fetchCredits = async () => {
+      try {
+        const response = await fetch("/api/user/credits");
+        if (response.ok) {
+          const data = await response.json();
+          setCredits(data.credits);
+        }
+      } catch (error) {
+        console.error("Failed to fetch credits:", error);
+      } finally {
+        setIsLoadingCredits(false);
+      }
+    };
+
+    fetchCredits();
+  }, []);
 
   // Export handlers
   const handleCopyHTML = async () => {
@@ -77,8 +101,8 @@ export default function ProjectNav({
 
   return (
     <nav className="h-10 flex items-center justify-between px-4 border-b border-white/20">
-      {/* Left: Back button + Project name */}
-      <div className="flex items-center justify-center">
+      {/* Left: Back button + Credits */}
+      <div className="flex items-center gap-2">
         <button
           onClick={() => router.push("/")}
           className="p-1.5 rounded-lg text-white/60 hover:text-white hover:bg-white/5 transition-all"
@@ -98,10 +122,49 @@ export default function ProjectNav({
             />
           </svg>
         </button>
+
+        {/* Credits Display */}
+        <Link
+          href="/pricing"
+          className="flex items-center gap-1.5 px-2 py-1 rounded-lg text-white/60 hover:text-white hover:bg-white/5 transition-all"
+        >
+          <span className="w-2 h-2 bg-white" />
+          {isLoadingCredits ? (
+            <span className="w-4 h-3 bg-white/20 animate-pulse rounded" />
+          ) : (
+            <span className="text-xs font-mono tabular-nums">{credits ?? 0}</span>
+          )}
+        </Link>
       </div>
 
       {/* Center: View toggle and Viewport controls */}
       <div className="flex items-center gap-3">
+         {/* Refresh button */}
+        <button
+          onClick={onRefreshPreview}
+          disabled={currentView !== "preview" || !onRefreshPreview}
+          className={`p-1 transition-all ${
+            currentView !== "preview" || !onRefreshPreview
+              ? "text-white/30 cursor-not-allowed"
+              : "text-white/60 hover:text-white"
+          }`}
+          aria-label="Refresh preview"
+        >
+          <svg
+            className="w-4 h-4"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth={2}
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            viewBox="0 0 24 24"
+          >
+            <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+            <path d="M19.933 13.041a8 8 0 1 1 -9.925 -8.788c3.899 -1 7.935 1.007 9.425 4.747" />
+            <path d="M20 4v5h-5" />
+          </svg>
+        </button>
+
         {/* View toggle */}
         <div className="flex items-center gap-2 bg-white/5 rounded-lg p-1">
           <button
@@ -489,7 +552,7 @@ export default function ProjectNav({
                   Download as Next.js
                 </span>
                 <span className="text-xs text-black/60">
-                  Download as complete project
+                  Complete project with 1 credit
                 </span>
               </div>
             </DropdownMenuItem>
