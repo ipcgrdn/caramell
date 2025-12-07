@@ -45,8 +45,7 @@ export async function POST(request: NextRequest) {
 
     const client = new DodoPayments({
       bearerToken: process.env.DODO_PAYMENTS_API_KEY || "",
-      // 나중에 제거해야 함.
-      environment: "test_mode",
+      // environment: "test_mode",
     });
 
     const checkoutSession = await client.checkoutSessions.create({
