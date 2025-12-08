@@ -6,7 +6,7 @@ export default function Footer() {
   return (
     <footer
       id="main-footer"
-      className="fixed bottom-0 left-0 w-full z-[-1] bg-[#EEE6DD] min-h-screen flex flex-col justify-between overflow-hidden"
+      className="relative w-full bg-[#EEE6DD] min-h-screen flex flex-col justify-between overflow-hidden"
     >
       {/* Top Section */}
       <div className="relative z-10 w-full px-8 md:px-16 pt-16">

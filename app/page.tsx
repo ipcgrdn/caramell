@@ -3,7 +3,6 @@ import Navbar from "@/components/sections/navbar";
 import Footer from "@/components/sections/footer";
 
 import SmoothScroll from "@/components/animations/SmoothScroll";
-import FooterSpacer from "@/components/animations/FooterSpacer";
 
 export default function Home() {
   return (
@@ -11,12 +10,8 @@ export default function Home() {
       <Navbar />
       <SmoothScroll>
         <HeroSection />
-        <div className="bg-background relative z-10">
-          {/* Add other sections here as they are built */}
-        </div>
-        <FooterSpacer />
+        <Footer />
       </SmoothScroll>
-      <Footer />
     </main>
   );
 }
