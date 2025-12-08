@@ -1,11 +1,13 @@
 import Link from "next/link";
-import Image from "next/image";
 
 export default function Footer() {
   const currentYear = new Date().getFullYear();
 
   return (
-    <footer className="relative bg-[#EEE6DD] min-h-screen flex flex-col justify-between overflow-hidden">
+    <footer
+      id="main-footer"
+      className="fixed bottom-0 left-0 w-full z-[-1] bg-[#EEE6DD] min-h-screen flex flex-col justify-between overflow-hidden"
+    >
       {/* Top Section */}
       <div className="relative z-10 w-full px-8 md:px-16 pt-16">
         <div className="flex flex-col md:flex-row justify-between items-start gap-12">

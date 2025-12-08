@@ -15,10 +15,8 @@ export default function HeroSection() {
       <div className="relative z-10 h-full flex flex-col items-center justify-center px-4 md:px-8 py-4 md:py-20 mb-20">
         {/* Main Title */}
         <h1 className="text-5xl md:text-7xl font-playfair text-white mb-4 text-center tracking-tighter">
-          <span className="">So </span>{" "}
-          <span className="italic">Sweet,</span>{" "}
-          <span className="">they</span>{" "}
-          <span className="">convert</span>
+          <span className="">So </span> <span className="italic">Sweet,</span>{" "}
+          <span className="">they</span> <span className="">convert</span>
         </h1>
 
         {/* Subtitle */}

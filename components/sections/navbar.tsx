@@ -138,7 +138,10 @@ export default function Navbar() {
         {isMobile && (
           <div className="flex items-center gap-2">
             <SignedOut>
-              <Link href="/signin" className="px-3 py-1.5 mt-0.5 text-sm font-medium">
+              <Link
+                href="/signin"
+                className="px-3 py-1.5 mt-0.5 text-sm font-medium"
+              >
                 Log in
               </Link>
             </SignedOut>
