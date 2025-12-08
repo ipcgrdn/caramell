@@ -55,7 +55,7 @@ export default function Footer() {
       {/* Giant Typography - Center */}
       <div className="relative flex-1 flex items-center overflow-hidden">
         {/* Registered Symbol */}
-        <div className="absolute top-12 right-8 md:right-16 z-20">
+        <div className="absolute top-20 right-8 md:right-16 z-20">
           <div className="w-16 h-16 md:w-24 md:h-24 rounded-full border-2 border-[#6B4E36] flex items-center justify-center">
             <span className="text-2xl md:text-4xl font-light text-[#6B4E36]">
               R
