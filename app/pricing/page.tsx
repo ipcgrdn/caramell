@@ -194,7 +194,8 @@ export default function PricingPage() {
               Pay once, create forever
             </h1>
             <p className="text-[#F5EDE3]/50 text-sm md:text-lg max-w-xl mx-auto">
-              Buy credits when you need them. No subscriptions.
+              Buy credits when you need them.
+              <span className="italic"> No subscriptions.</span>
             </p>
           </motion.div>
 
@@ -203,7 +204,7 @@ export default function PricingPage() {
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, delay: 0.1 }}
-            className="grid grid-cols-1 md:grid-cols-2 gap-8 md:gap-4 mb-20"
+            className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-20"
           >
             {pricingTiers.map((tier, index) => (
               <motion.div

@@ -91,10 +91,10 @@ export default function Navbar() {
                 Pricing
               </Link>
               <Link
-                href="/enterprises"
-                className="hover:text-[#D4A574] transition-colors text-sm font-medium"
+                href="/templates"
+                className="hidden hover:text-[#D4A574] transition-colors text-sm font-medium"
               >
-                Enterprise
+                Templates
               </Link>
             </div>
 
@@ -138,7 +138,7 @@ export default function Navbar() {
         {isMobile && (
           <div className="flex items-center gap-2">
             <SignedOut>
-              <Link href="/signin" className="px-3 py-1.5 text-sm font-medium">
+              <Link href="/signin" className="px-3 py-1.5 mt-0.5 text-sm font-medium">
                 Log in
               </Link>
             </SignedOut>
@@ -177,7 +177,7 @@ export default function Navbar() {
             animate={{ opacity: 1, height: "auto" }}
             exit={{ opacity: 0, height: 0 }}
             transition={{ duration: 0.3, ease: "easeInOut" }}
-            className="overflow-hidden bg-black/80 rounded-2xl backdrop-blur-xl mt-2"
+            className="overflow-hidden bg-transparent mt-2"
           >
             <div className="flex flex-col py-4 px-4 space-y-4">
               {/* Navigation Links */}
@@ -197,11 +197,11 @@ export default function Navbar() {
                   Pricing
                 </Link>
                 <Link
-                  href="/enterprises"
+                  href="/templates"
                   onClick={() => setIsMobileMenuOpen(false)}
-                  className="text-lg font-medium hover:text-[#D4A574] transition-colors py-2"
+                  className="hidden text-lg font-medium hover:text-[#D4A574] transition-colors py-2"
                 >
-                  Enterprise
+                  Templates
                 </Link>
               </div>
 
@@ -210,7 +210,7 @@ export default function Navbar() {
                 <Link
                   href="/signup"
                   onClick={() => setIsMobileMenuOpen(false)}
-                  className="w-full px-4 py-2 text-center text-base font-medium bg-[#D4A574] hover:bg-[#c49664] text-black rounded-xl transition-colors"
+                  className="w-full px-4 py-3 text-center text-base font-medium bg-[#D4A574] hover:bg-[#c49664] text-black rounded-xl transition-colors"
                 >
                   Sign up
                 </Link>

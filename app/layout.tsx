@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Geist, Playfair_Display } from "next/font/google";
+import { Geist, Playfair_Display, Bungee } from "next/font/google";
 import { ClerkProvider } from "@clerk/nextjs";
 import { dark } from "@clerk/themes";
 import { Toaster } from "sonner";
@@ -21,6 +21,12 @@ const playfair = Playfair_Display({
   subsets: ["latin"],
   style: ["normal", "italic"],
   weight: ["400", "500", "600", "700", "800", "900"],
+});
+
+const bungee = Bungee({
+  variable: "--font-bungee",
+  subsets: ["latin"],
+  weight: "400",
 });
 
 export const metadata: Metadata = {
@@ -125,7 +131,7 @@ export default function RootLayout({
           </Script>
         </head>
         <body
-          className={`${geistSans.variable} ${playfair.variable} antialiased`}
+          className={`${geistSans.variable} ${playfair.variable} ${bungee.variable} antialiased`}
         >
           <Toaster position="bottom-right" />
           {children}
