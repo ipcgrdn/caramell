@@ -85,16 +85,16 @@ export default function Navbar() {
                 Blog
               </Link>
               <Link
+                href="/showcase"
+                className="hover:text-[#D4A574] transition-colors text-sm font-medium"
+              >
+                Showcase
+              </Link>
+              <Link
                 href="/pricing"
                 className="hover:text-[#D4A574] transition-colors text-sm font-medium"
               >
                 Pricing
-              </Link>
-              <Link
-                href="/templates"
-                className="hidden hover:text-[#D4A574] transition-colors text-sm font-medium"
-              >
-                Templates
               </Link>
             </div>
 
@@ -193,18 +193,18 @@ export default function Navbar() {
                   Blog
                 </Link>
                 <Link
+                  href="/showcase"
+                  onClick={() => setIsMobileMenuOpen(false)}
+                  className="text-lg font-medium hover:text-[#D4A574] transition-colors py-2"
+                >
+                  Showcase
+                </Link>
+                <Link
                   href="/pricing"
                   onClick={() => setIsMobileMenuOpen(false)}
                   className="text-lg font-medium hover:text-[#D4A574] transition-colors py-2"
                 >
                   Pricing
-                </Link>
-                <Link
-                  href="/templates"
-                  onClick={() => setIsMobileMenuOpen(false)}
-                  className="hidden text-lg font-medium hover:text-[#D4A574] transition-colors py-2"
-                >
-                  Templates
                 </Link>
               </div>
 

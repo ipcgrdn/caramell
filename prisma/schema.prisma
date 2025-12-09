@@ -57,6 +57,7 @@ model Project {
   aiModel       String   @default("claude")
   attachedFiles Json?
   templateId    String?
+  isPublic      Boolean  @default(false)
 
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
@@ -66,6 +67,7 @@ model Project {
   @@index([userId])
   @@index([status])
   @@index([userId, createdAt(sort: Desc)])
+  @@index([isPublic])
 }
 
 model ChatMessage {

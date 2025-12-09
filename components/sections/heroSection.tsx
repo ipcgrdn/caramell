@@ -1,6 +1,7 @@
 import { MeshGradient } from "@paper-design/shaders-react";
 import PromptInput from "@/components/main/PromptInput";
 import RecentProject from "@/components/main/recentProject";
+import Showcase from "@/components/main/Showcase";
 
 export default function HeroSection() {
   return (
@@ -30,6 +31,11 @@ export default function HeroSection() {
 
       {/* Recent Projects Section - Inside Hero */}
       <RecentProject />
+
+      {/* Showcase Section */}
+      <div className="mt-20">
+        <Showcase />
+      </div>
     </div>
   );
 }

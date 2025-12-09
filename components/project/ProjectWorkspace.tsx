@@ -20,6 +20,7 @@ interface Project {
   name: string | null;
   files: Record<string, string> | null;
   status: string;
+  isPublic: boolean;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -44,6 +45,8 @@ export default function ProjectWorkspace({ project }: { project: Project }) {
   const [isGeneratingNextJs, setIsGeneratingNextJs] = useState(false);
   const [streamingCode, setStreamingCode] = useState<string>("");
   const [previewKey, setPreviewKey] = useState(0);
+  const [isPublic, setIsPublic] = useState(project.isPublic);
+  const [isFullscreen, setIsFullscreen] = useState(false);
 
   useEffect(() => {
     const savedView = localStorage.getItem(getStorageKey("currentView"));
@@ -205,6 +208,34 @@ export default function ProjectWorkspace({ project }: { project: Project }) {
     document.addEventListener("mouseup", handleMouseUp);
   };
 
+  const handlePublicChange = async (newIsPublic: boolean) => {
+    try {
+      const response = await fetch(`/api/projects/${project.id}/visibility`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ isPublic: newIsPublic }),
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to update visibility");
+      }
+
+      setIsPublic(newIsPublic);
+      toast.success(newIsPublic ? "Project is now public" : "Project is now private");
+    } catch (error) {
+      console.error("Failed to update visibility:", error);
+      toast.error("Failed to update visibility");
+    }
+  };
+
+  const handleFullscreen = () => {
+    setIsFullscreen(true);
+  };
+
+  const handleExitFullscreen = () => {
+    setIsFullscreen(false);
+  };
+
   const handleGenerateNextProject = async () => {
     if (!files || !files["index.html"]) {
       toast.error("File not found");
@@ -283,6 +314,36 @@ export default function ProjectWorkspace({ project }: { project: Project }) {
     );
   }
 
+  // Fullscreen mode
+  if (isFullscreen) {
+    return (
+      <div className="fixed inset-0">
+        {/* Exit fullscreen button */}
+        <button
+          onClick={handleExitFullscreen}
+          className="absolute top-4 right-4 z-10 p-2 bg-black/50 hover:bg-black/70 rounded-lg text-white/60 hover:text-white transition-all"
+          aria-label="Exit fullscreen"
+        >
+          <svg
+            className="w-4 h-4"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth={2}
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            viewBox="0 0 24 24"
+          >
+            <path d="M8 3v3a2 2 0 0 1-2 2H3" />
+            <path d="M21 8h-3a2 2 0 0 1-2-2V3" />
+            <path d="M3 16h3a2 2 0 0 1 2 2v3" />
+            <path d="M16 21v-3a2 2 0 0 1 2-2h3" />
+          </svg>
+        </button>
+        <ProjectScreen files={files} viewportSize="desktop" />
+      </div>
+    );
+  }
+
   return (
     <div className="h-screen flex flex-col bg-black">
       {/* Generating Modal */}
@@ -300,6 +361,9 @@ export default function ProjectWorkspace({ project }: { project: Project }) {
         files={files}
         onGenerateNextProject={handleGenerateNextProject}
         onRefreshPreview={() => setPreviewKey((prev) => prev + 1)}
+        onFullscreen={handleFullscreen}
+        isPublic={isPublic}
+        onPublicChange={handlePublicChange}
       />
 
       {/* Main content */}

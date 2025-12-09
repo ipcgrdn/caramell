@@ -24,6 +24,9 @@ interface ProjectNavProps {
   files?: Record<string, string> | null;
   onGenerateNextProject?: () => void;
   onRefreshPreview?: () => void;
+  onFullscreen?: () => void;
+  isPublic?: boolean;
+  onPublicChange?: (isPublic: boolean) => void;
 }
 
 export default function ProjectNav({
@@ -37,6 +40,9 @@ export default function ProjectNav({
   files,
   onGenerateNextProject,
   onRefreshPreview,
+  onFullscreen,
+  isPublic = false,
+  onPublicChange,
 }: ProjectNavProps) {
   const router = useRouter();
   const [credits, setCredits] = useState<number | null>(null);
@@ -132,14 +138,43 @@ export default function ProjectNav({
           {isLoadingCredits ? (
             <span className="w-4 h-3 bg-white/20 animate-pulse rounded" />
           ) : (
-            <span className="text-xs font-mono tabular-nums">{credits ?? 0}</span>
+            <span className="text-xs font-mono tabular-nums">
+              {credits ?? 0}
+            </span>
           )}
         </Link>
       </div>
 
       {/* Center: View toggle and Viewport controls */}
       <div className="flex items-center gap-3">
-         {/* Refresh button */}
+        {/* Fullscreen button */}
+        <button
+          onClick={onFullscreen}
+          disabled={currentView !== "preview" || !onFullscreen}
+          className={`p-1 transition-all ${
+            currentView !== "preview" || !onFullscreen
+              ? "text-white/30 cursor-not-allowed"
+              : "text-white/60 hover:text-white"
+          }`}
+          aria-label="Fullscreen preview"
+        >
+          <svg
+            className="w-4 h-4"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth={2}
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            viewBox="0 0 24 24"
+          >
+            <path d="M8 3H5a2 2 0 0 0-2 2v3" />
+            <path d="M21 8V5a2 2 0 0 0-2-2h-3" />
+            <path d="M3 16v3a2 2 0 0 0 2 2h3" />
+            <path d="M16 21h3a2 2 0 0 0 2-2v-3" />
+          </svg>
+        </button>
+
+        {/* Refresh button */}
         <button
           onClick={onRefreshPreview}
           disabled={currentView !== "preview" || !onRefreshPreview}
@@ -375,11 +410,19 @@ export default function ProjectNav({
             className="w-72 bg-white/90 backdrop-blur-md border border-black/15 rounded-2xl overflow-hidden shadow-lg p-3"
           >
             {/* Preview URL Display */}
-            <div className="mb-2 p-3 bg-black/5 rounded-xl">
+            <div
+              className={`mb-2 p-3 bg-black/5 rounded-xl ${
+                !isPublic ? "opacity-50" : ""
+              }`}
+            >
               <div className="flex items-center gap-2 mb-2">
-                <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse" />
+                <div
+                  className={`w-2 h-2 rounded-full ${
+                    isPublic ? "bg-green-500 animate-pulse" : "bg-black/30"
+                  }`}
+                />
                 <span className="text-xs font-medium text-black/60">
-                  Live Preview
+                  {isPublic ? "Live Preview" : "Preview Disabled"}
                 </span>
               </div>
               <div className="flex items-center gap-2">
@@ -391,13 +434,48 @@ export default function ProjectNav({
               </div>
             </div>
 
+            {/* Public Toggle */}
+            <div className="mb-3 p-3 bg-black/5 rounded-xl">
+              <div className="flex items-center justify-between">
+                <div className="flex flex-col">
+                  <span className="text-sm font-medium text-black/80">
+                    Public
+                  </span>
+                  <span className="text-xs text-black/60">
+                    {isPublic ? "Anyone can view" : "Only you can view"}
+                  </span>
+                </div>
+                <button
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    onPublicChange?.(!isPublic);
+                  }}
+                  className={`relative w-11 h-6 rounded-full transition-colors ${
+                    isPublic ? "bg-green-500" : "bg-black/20"
+                  }`}
+                >
+                  <span
+                    className={`absolute top-1 left-1 w-4 h-4 bg-white rounded-full transition-transform shadow-sm ${
+                      isPublic ? "translate-x-5" : "translate-x-0"
+                    }`}
+                  />
+                </button>
+              </div>
+            </div>
+
             <DropdownMenuItem
               onClick={() => {
-                if (projectId) {
+                if (projectId && isPublic) {
                   window.open(`/p/${projectId}`, "_blank");
                 }
               }}
-              className="cursor-pointer px-3 py-2 text-black/80 hover:bg-black/5 hover:text-black focus:bg-black/5 focus:text-black transition-colors flex items-center gap-3 rounded-xl"
+              disabled={!isPublic}
+              className={`cursor-pointer px-3 py-2 hover:bg-black/5 focus:bg-black/5 transition-colors flex items-center gap-3 rounded-xl ${
+                isPublic
+                  ? "text-black/80 hover:text-black focus:text-black"
+                  : "text-black/30 cursor-not-allowed"
+              }`}
             >
               <svg
                 className="w-4 h-4"
@@ -415,14 +493,16 @@ export default function ProjectNav({
               <div className="flex flex-col">
                 <span className="text-sm font-medium">Open in New Tab</span>
                 <span className="text-xs text-black/60">
-                  View full-screen preview
+                  {isPublic
+                    ? "View full-screen preview"
+                    : "Enable public to preview"}
                 </span>
               </div>
             </DropdownMenuItem>
 
             <DropdownMenuItem
               onClick={async () => {
-                if (projectId) {
+                if (projectId && isPublic) {
                   const url =
                     typeof window !== "undefined"
                       ? `${window.location.origin}/p/${projectId}`
@@ -435,7 +515,12 @@ export default function ProjectNav({
                   }
                 }
               }}
-              className="cursor-pointer px-3 py-2 text-black/80 hover:bg-black/5 hover:text-black focus:bg-black/5 focus:text-black transition-colors flex items-center gap-3 rounded-xl"
+              disabled={!isPublic}
+              className={`cursor-pointer px-3 py-2 hover:bg-black/5 focus:bg-black/5 transition-colors flex items-center gap-3 rounded-xl ${
+                isPublic
+                  ? "text-black/80 hover:text-black focus:text-black"
+                  : "text-black/30 cursor-not-allowed"
+              }`}
             >
               <svg
                 className="w-4 h-4"
@@ -453,7 +538,9 @@ export default function ProjectNav({
               <div className="flex flex-col">
                 <span className="text-sm font-medium">Share Link</span>
                 <span className="text-xs text-black/60">
-                  Copy and share this preview URL
+                  {isPublic
+                    ? "Copy and share this preview URL"
+                    : "Enable public to share"}
                 </span>
               </div>
             </DropdownMenuItem>
