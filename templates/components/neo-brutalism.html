@@ -1,0 +1,403 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Neo-Brutalism Style</title>
+
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Lexend+Mega:wght@400;700;900&family=Public+Sans:wght@400;700&display=swap"
+      rel="stylesheet"
+    />
+
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            fontFamily: {
+              display: ['"Lexend Mega"', "sans-serif"],
+              body: ['"Public Sans"', "sans-serif"],
+            },
+            colors: {
+              "neo-bg": "#FFFAF0",
+              "neo-green": "#A6FA00",
+              "neo-pink": "#FF90E8",
+              "neo-yellow": "#FFD700",
+              "neo-blue": "#22D3EE",
+            },
+            boxShadow: {
+              "neo-hard": "4px 4px 0px 0px rgba(0,0,0,1)",
+              "neo-hard-sm": "2px 2px 0px 0px rgba(0,0,0,1)",
+              "neo-hard-lg": "8px 8px 0px 0px rgba(0,0,0,1)",
+            },
+            animation: {
+              marquee: "marquee 15s linear infinite",
+              "marquee-reverse": "marquee-reverse 15s linear infinite",
+            },
+            keyframes: {
+              marquee: {
+                "0%": { transform: "translateX(0)" },
+                "100%": { transform: "translateX(-50%)" },
+              },
+              "marquee-reverse": {
+                "0%": { transform: "translateX(-50%)" },
+                "100%": { transform: "translateX(0%)" },
+              },
+            },
+          },
+        },
+      };
+    </script>
+
+    <style>
+      /* UnicornStudio branding hide (just in case) */
+      [data-us-project] a,
+      [data-us-project] button {
+        display: none !important;
+      }
+
+      .stroke-text {
+        -webkit-text-stroke: 1px black;
+        color: transparent;
+      }
+
+      .stroke-text-white {
+        -webkit-text-stroke: 1px white;
+        color: transparent;
+      }
+
+      .neo-border {
+        border: 3px solid black;
+      }
+
+      /* Sticker effect */
+      .sticker {
+        filter: drop-shadow(4px 4px 0px rgba(0, 0, 0, 0.2));
+      }
+    </style>
+  </head>
+  <body class="font-body bg-neo-bg text-black overflow-x-hidden">
+    <!-- Navigation -->
+    <nav class="border-b-4 border-black bg-white sticky top-0 z-50">
+      <div
+        class="container mx-auto px-4 py-4 flex justify-between items-center"
+      >
+        <div class="font-display font-black text-2xl tracking-tighter">
+          NEO<span class="text-neo-pink">BRAND</span>
+        </div>
+        <div class="hidden md:flex gap-8 font-bold text-sm">
+          <a
+            href="#"
+            class="hover:underline decoration-4 underline-offset-4 decoration-neo-green"
+            >SHOP</a
+          >
+          <a
+            href="#"
+            class="hover:underline decoration-4 underline-offset-4 decoration-neo-green"
+            >COLLECTIONS</a
+          >
+          <a
+            href="#"
+            class="hover:underline decoration-4 underline-offset-4 decoration-neo-green"
+            >ABOUT</a
+          >
+        </div>
+        <button
+          class="font-bold border-2 border-black px-4 py-2 hover:bg-black hover:text-white transition-colors shadow-neo-hard-sm"
+        >
+          CART (0)
+        </button>
+      </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <section class="relative pt-12 pb-24 overflow-hidden">
+      <!-- Decorative Elements -->
+      <div
+        class="absolute top-10 right-[10%] w-24 h-24 bg-neo-yellow rounded-full neo-border z-0"
+      ></div>
+      <div
+        class="absolute bottom-20 left-[5%] w-16 h-16 bg-neo-blue rotate-45 neo-border z-0"
+      ></div>
+
+      <div class="container mx-auto px-4 relative z-10 text-center">
+        <!-- Main Headline -->
+        <h1
+          class="font-display font-black text-5xl md:text-8xl leading-tight mb-8"
+        >
+          YO<span class="inline-block align-middle mx-1"
+            ><div
+              class="w-12 h-16 bg-neo-green rounded-full neo-border flex items-center justify-center transform -rotate-12"
+            >
+              ⚡
+            </div></span
+          >UNG & <br />
+          BADASS
+        </h1>
+
+        <p
+          class="font-display text-xl md:text-3xl font-bold mb-10 tracking-widest bg-black text-white inline-block px-4 py-1 transform -rotate-2"
+        >
+          STYLE FOR YOU
+        </p>
+
+        <!-- CTA -->
+        <div class="mt-8">
+          <button
+            class="bg-white text-black font-display font-bold text-lg px-8 py-4 neo-border shadow-neo-hard hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-neo-hard-sm transition-all group"
+          >
+            SHOP ALL
+            <span
+              class="inline-block transform group-hover:rotate-45 transition-transform"
+              >↗</span
+            >
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <!-- Marquee Section -->
+    <section
+      class="border-y-4 border-black bg-neo-green overflow-hidden py-3 relative transform -rotate-1 scale-110 z-20"
+    >
+      <div class="whitespace-nowrap flex animate-marquee">
+        <span class="font-display font-black text-xl mx-4"
+          >UP TO 50% DISCOUNT</span
+        >
+        <span
+          class="font-display font-black text-xl mx-4 text-white stroke-text"
+          >SUMMER SALE</span
+        >
+        <span class="font-display font-black text-xl mx-4"
+          >UP TO 50% DISCOUNT</span
+        >
+        <span
+          class="font-display font-black text-xl mx-4 text-white stroke-text"
+          >SUMMER SALE</span
+        >
+        <span class="font-display font-black text-xl mx-4"
+          >UP TO 50% DISCOUNT</span
+        >
+        <span
+          class="font-display font-black text-xl mx-4 text-white stroke-text"
+          >SUMMER SALE</span
+        >
+        <!-- Duplicate for seamless loop -->
+        <span class="font-display font-black text-xl mx-4"
+          >UP TO 50% DISCOUNT</span
+        >
+        <span
+          class="font-display font-black text-xl mx-4 text-white stroke-text"
+          >SUMMER SALE</span
+        >
+        <span class="font-display font-black text-xl mx-4"
+          >UP TO 50% DISCOUNT</span
+        >
+        <span
+          class="font-display font-black text-xl mx-4 text-white stroke-text"
+          >SUMMER SALE</span
+        >
+        <span class="font-display font-black text-xl mx-4"
+          >UP TO 50% DISCOUNT</span
+        >
+        <span
+          class="font-display font-black text-xl mx-4 text-white stroke-text"
+          >SUMMER SALE</span
+        >
+      </div>
+    </section>
+
+    <section
+      class="border-y-4 border-black bg-neo-yellow overflow-hidden py-3 relative transform rotate-2 top-[-20px] scale-110 z-10"
+    >
+      <div class="whitespace-nowrap flex animate-marquee-reverse">
+        <span class="font-display font-black text-xl mx-4">NEW ARRIVAL</span>
+        <span
+          class="font-display font-black text-xl mx-4 text-white stroke-text"
+          >STREET WEAR</span
+        >
+        <span class="font-display font-black text-xl mx-4">NEW ARRIVAL</span>
+        <span
+          class="font-display font-black text-xl mx-4 text-white stroke-text"
+          >STREET WEAR</span
+        >
+        <span class="font-display font-black text-xl mx-4">NEW ARRIVAL</span>
+        <span
+          class="font-display font-black text-xl mx-4 text-white stroke-text"
+          >STREET WEAR</span
+        >
+        <!-- Duplicate -->
+        <span class="font-display font-black text-xl mx-4">NEW ARRIVAL</span>
+        <span
+          class="font-display font-black text-xl mx-4 text-white stroke-text"
+          >STREET WEAR</span
+        >
+        <span class="font-display font-black text-xl mx-4">NEW ARRIVAL</span>
+        <span
+          class="font-display font-black text-xl mx-4 text-white stroke-text"
+          >STREET WEAR</span
+        >
+        <span class="font-display font-black text-xl mx-4">NEW ARRIVAL</span>
+        <span
+          class="font-display font-black text-xl mx-4 text-white stroke-text"
+          >STREET WEAR</span
+        >
+      </div>
+    </section>
+
+    <!-- New Arrival Grid -->
+    <section class="py-20 container mx-auto px-4">
+      <div class="flex justify-between items-end mb-12">
+        <h2
+          class="font-display font-black text-4xl md:text-6xl relative inline-block"
+        >
+          NEW ARRIVAL
+          <svg
+            class="absolute -z-10 -bottom-2 -left-2 w-full h-4 text-neo-pink opacity-50"
+            viewBox="0 0 100 10"
+            preserveAspectRatio="none"
+          >
+            <path
+              d="M0 5 Q 50 10 100 5"
+              stroke="currentColor"
+              stroke-width="8"
+              fill="none"
+            />
+          </svg>
+        </h2>
+        <div class="flex gap-2">
+          <button
+            class="w-12 h-12 neo-border flex items-center justify-center hover:bg-black hover:text-white transition-colors shadow-neo-hard-sm"
+          >
+            ←
+          </button>
+          <button
+            class="w-12 h-12 neo-border flex items-center justify-center hover:bg-black hover:text-white transition-colors shadow-neo-hard-sm"
+          >
+            →
+          </button>
+        </div>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+        <!-- Card 1 -->
+        <div class="group relative">
+          <div
+            class="absolute inset-0 bg-black translate-x-2 translate-y-2 neo-border"
+          ></div>
+          <div
+            class="relative bg-white neo-border p-4 transition-transform group-hover:-translate-x-1 group-hover:-translate-y-1"
+          >
+            <div
+              class="aspect-3/4 bg-gray-200 mb-4 overflow-hidden relative border-2 border-black"
+            >
+              <!-- Placeholder for product image -->
+              <div
+                class="absolute inset-0 bg-neo-pink opacity-20 group-hover:opacity-0 transition-opacity"
+              ></div>
+              <img
+                src="https://images.unsplash.com/photo-1503341504253-dff4815485f1?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80"
+                alt="Product"
+                class="w-full h-full object-cover grayscale group-hover:grayscale-0 transition-all duration-300"
+              />
+              <div
+                class="absolute top-2 left-2 bg-neo-yellow px-2 py-1 font-bold text-xs border border-black"
+              >
+                NEW
+              </div>
+            </div>
+            <div class="flex justify-between items-start">
+              <div>
+                <h3 class="font-display font-bold text-lg">ACID WASH TEE</h3>
+                <p class="text-sm text-gray-600 font-bold">$45.00</p>
+              </div>
+              <button
+                class="w-8 h-8 bg-black text-white flex items-center justify-center border border-black hover:bg-neo-green hover:text-black transition-colors"
+              >
+                +
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Card 2 -->
+        <div class="group relative">
+          <div
+            class="absolute inset-0 bg-black translate-x-2 translate-y-2 neo-border"
+          ></div>
+          <div
+            class="relative bg-white neo-border p-4 transition-transform group-hover:-translate-x-1 group-hover:-translate-y-1"
+          >
+            <div
+              class="aspect-3/4 bg-gray-200 mb-4 overflow-hidden relative border-2 border-black"
+            >
+              <div
+                class="absolute inset-0 bg-neo-blue opacity-20 group-hover:opacity-0 transition-opacity"
+              ></div>
+              <img
+                src="https://images.unsplash.com/photo-1552374196-1ab2a1c593e8?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80"
+                alt="Product"
+                class="w-full h-full object-cover grayscale group-hover:grayscale-0 transition-all duration-300"
+              />
+            </div>
+            <div class="flex justify-between items-start">
+              <div>
+                <h3 class="font-display font-bold text-lg">BAGGY JEANS</h3>
+                <p class="text-sm text-gray-600 font-bold">$89.00</p>
+              </div>
+              <button
+                class="w-8 h-8 bg-black text-white flex items-center justify-center border border-black hover:bg-neo-green hover:text-black transition-colors"
+              >
+                +
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Card 3 -->
+        <div class="group relative">
+          <div
+            class="absolute inset-0 bg-black translate-x-2 translate-y-2 neo-border"
+          ></div>
+          <div
+            class="relative bg-white neo-border p-4 transition-transform group-hover:-translate-x-1 group-hover:-translate-y-1"
+          >
+            <div
+              class="aspect-3/4 bg-gray-200 mb-4 overflow-hidden relative border-2 border-black"
+            >
+              <div
+                class="absolute inset-0 bg-neo-green opacity-20 group-hover:opacity-0 transition-opacity"
+              ></div>
+              <img
+                src="https://images.unsplash.com/photo-1574180566232-aaad1b5b8450?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80"
+                alt="Product"
+                class="w-full h-full object-cover grayscale group-hover:grayscale-0 transition-all duration-300"
+              />
+              <div
+                class="absolute top-2 right-2 bg-neo-pink px-2 py-1 font-bold text-xs border border-black text-white transform rotate-3"
+              >
+                HOT
+              </div>
+            </div>
+            <div class="flex justify-between items-start">
+              <div>
+                <h3 class="font-display font-bold text-lg">NEON VISOR</h3>
+                <p class="text-sm text-gray-600 font-bold">$32.00</p>
+              </div>
+              <button
+                class="w-8 h-8 bg-black text-white flex items-center justify-center border border-black hover:bg-neo-green hover:text-black transition-colors"
+              >
+                +
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  </body>
+</html>

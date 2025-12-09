@@ -3,6 +3,9 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { AIModel, getModelCredits } from "@/lib/aiTypes";
 import { generateLandingPageStream } from "@/lib/aiGenerator";
+import { TEMPLATES } from "@/templates";
+import { readFile } from "fs/promises";
+import { join } from "path";
 
 export const runtime = "nodejs";
 export const maxDuration = 300; // 5분
@@ -71,8 +74,33 @@ export async function POST(
             size: number;
             data: string;
           }> | null;
+
+          // 템플릿이 있으면 HTML을 읽어서 프롬프트에 주입
+          let finalPrompt = project.prompt;
+          if (project.templateId) {
+            const template = TEMPLATES.find((t) => t.id === project.templateId);
+            if (template) {
+              try {
+                const templatePath = join(
+                  process.cwd(),
+                  template.componentPath
+                );
+                const templateHtml = await readFile(templatePath, "utf-8");
+                finalPrompt = `[TEMPLATE]
+                  <TEMPLATE>
+                  ${templateHtml}
+                  </TEMPLATE>
+
+                  [USER REQUEST]
+                  ${project.prompt}`;
+              } catch (err) {
+                console.error("Failed to read template file:", err);
+              }
+            }
+          }
+
           const generator = generateLandingPageStream(
-            project.prompt,
+            finalPrompt,
             aiModel,
             attachedFiles || undefined
           );

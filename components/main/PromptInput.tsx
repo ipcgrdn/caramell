@@ -1,7 +1,9 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
+import { createPortal } from "react-dom";
 import { useRouter } from "next/navigation";
+import Image from "next/image";
 import { useUser } from "@clerk/nextjs";
 import { toast } from "sonner";
 
@@ -26,6 +28,8 @@ export default function PromptInput() {
   );
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
   const [isDragging, setIsDragging] = useState(false);
+  const [isPreviewVisible, setIsPreviewVisible] = useState(false);
+  const [previewPosition, setPreviewPosition] = useState({ x: 0, y: 0 });
   const router = useRouter();
   const { isSignedIn } = useUser();
   const textareaRef = useRef<HTMLTextAreaElement>(null);
@@ -67,6 +71,7 @@ export default function PromptInput() {
           prompt,
           aiModel: selectedModel,
           files: encodedFiles.length > 0 ? encodedFiles : undefined,
+          templateId: selectedTemplate?.id,
         }),
       });
 
@@ -105,20 +110,53 @@ export default function PromptInput() {
 
   const handleApplyTemplate = (template: Template) => {
     setSelectedTemplate(template);
-    const templateNote = `@${template.name}`;
-    if (prompt && !prompt.includes(templateNote)) {
-      setPrompt((prev) => `${prev}\n\n${templateNote}`);
-    } else if (!prompt) {
-      setPrompt(templateNote);
+  };
+
+  const handleRemoveTemplate = () => {
+    setSelectedTemplate(null);
+  };
+
+  const handleTemplateHoverStart = (e: React.MouseEvent) => {
+    updatePreviewPosition(e);
+    setIsPreviewVisible(true);
+  };
+
+  const handleTemplateHoverMove = (e: React.MouseEvent) => {
+    if (isPreviewVisible) {
+      updatePreviewPosition(e);
     }
   };
 
-  // 파일 선택 버튼 클릭 핸들러
+  const handleTemplateHoverEnd = () => {
+    setIsPreviewVisible(false);
+  };
+
+  const updatePreviewPosition = (e: React.MouseEvent) => {
+    const cardWidth = 280;
+    const cardHeight = 200;
+    const offsetY = 5;
+
+    let x = e.clientX - cardWidth / 2;
+    let y = e.clientY - cardHeight - offsetY;
+
+    // 화면 경계 체크
+    if (x + cardWidth > window.innerWidth - 20) {
+      x = window.innerWidth - cardWidth - 20;
+    }
+    if (x < 20) {
+      x = 20;
+    }
+    if (y < 20) {
+      y = e.clientY + offsetY;
+    }
+
+    setPreviewPosition({ x, y });
+  };
+
   const handleAttachClick = () => {
     fileInputRef.current?.click();
   };
 
-  // 파일 유효성 검사
   const validateFiles = (files: File[]): File[] => {
     const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
     const validFiles: File[] = [];
@@ -249,6 +287,70 @@ export default function PromptInput() {
           }}
         />
       </div>
+
+      {/* 선택된 템플릿 태그 */}
+      {selectedTemplate && (
+        <div className="flex flex-wrap gap-2">
+          <div
+            className="flex items-center gap-2 rounded-lg border border-white/10 px-2 py-1.5 text-xs text-white group hover:bg-white/10 transition-colors cursor-pointer"
+            onMouseEnter={handleTemplateHoverStart}
+            onMouseMove={handleTemplateHoverMove}
+            onMouseLeave={handleTemplateHoverEnd}
+          >
+            <span>@</span>
+            <span className="font-medium">{selectedTemplate.name}</span>
+            <button
+              type="button"
+              onClick={handleRemoveTemplate}
+              className="p-0.5"
+              title="Remove template"
+            >
+              <svg
+                className="w-3 h-3"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M6 18L18 6M6 6l12 12"
+                />
+              </svg>
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* 템플릿 미리보기 카드 */}
+      {selectedTemplate &&
+        isPreviewVisible &&
+        createPortal(
+          <div
+            className="fixed z-50 pointer-events-none"
+            style={{
+              left: `${previewPosition.x}px`,
+              top: `${previewPosition.y}px`,
+            }}
+          >
+            <div className="bg-black/50 rounded-2xl border border-white/10 p-2">
+              <Image
+                src={selectedTemplate.thumbnail}
+                alt={selectedTemplate.name}
+                width={260}
+                height={160}
+                className="rounded-2xl object-cover"
+              />
+              <div className="mt-2 ml-2 text-left">
+                <div className="text-white text-sm font-semibold">
+                  {selectedTemplate.name}
+                </div>
+              </div>
+            </div>
+          </div>,
+          document.body
+        )}
 
       {/* 파일 미리보기 */}
       {selectedFiles.length > 0 && (
@@ -419,20 +521,7 @@ export default function PromptInput() {
             disabled={isLoading}
             className="flex items-center gap-1 px-2 py-1 rounded-lg transition-colors text-white text-xs font-medium disabled:opacity-50 border border-white/10 hover:bg-white/10"
           >
-            <svg
-              className="w-3.5 h-3.5"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zm0 0h12a2 2 0 002-2v-4a2 2 0 00-2-2h-2.343M11 7.343l1.657-1.657a2 2 0 012.828 0l2.829 2.829a2 2 0 010 2.828l-8.486 8.485M7 17h.01"
-              />
-            </svg>
-            <span>Template</span>
+            @<span>Template</span>
           </button>
         </div>
 

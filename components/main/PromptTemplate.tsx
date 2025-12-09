@@ -145,7 +145,7 @@ export default function PromptTemplate({
           <button
             onClick={handleApply}
             disabled={!selectedTemplateId}
-            className="px-6 py-2.5 text-sm font-semibold text-black bg-[#C68E52] hover:bg-[#B07A3E] rounded-full transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            className="px-6 py-2.5 text-sm font-semibold text-black bg-[#D4A574] hover:bg-[#B88C59] rounded-full transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
           >
             Apply →
           </button>

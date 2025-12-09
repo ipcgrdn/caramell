@@ -15,14 +15,14 @@ Design Rules:
 - Use intentional negative space
 
 Background Options:
-1. Solid color (monochromatic background)
-2. Full-bleed image
-3. Neobrutalism (bold borders, hard shadows, high-contrast)
-4. Shader-based gradient animation (fluid morphing colors using WebGL/canvas effects)
-5. Particle field or matrix
-6. Fluid interaction
-7. Editorial typographic layout (magazine-inspired composition with oversized type treatments)
-8. Custom creative layout (if user required)
+1. Template-based design (if [TEMPLATE] is provided, it takes HIGHEST PRIORITY - adapt and remix the template while preserving its core visual style, animations, and layout patterns)
+2. Solid color (monochromatic background)
+3. Full-bleed image
+4. Neobrutalism (bold borders, hard shadows, high-contrast)
+5. Shader-based gradient animation (fluid morphing colors using WebGL/canvas effects)
+6. Particle field or matrix
+7. Fluid interaction
+8. Editorial typographic layout (magazine-inspired composition with oversized type treatments)
 </HERO GUIDELINES>
 
 <FEATURE GUIDELINES>
