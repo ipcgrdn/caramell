@@ -8,6 +8,9 @@ const nextConfig: NextConfig = {
       {
         pathname: '/screenshots/**',
       },
+      {
+        pathname: '/templates/thumbnails/**',
+      },
     ],
   },
 };

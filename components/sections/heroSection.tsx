@@ -4,10 +4,10 @@ import RecentProject from "@/components/main/recentProject";
 
 export default function HeroSection() {
   return (
-    <div className="w-full min-h-screen relative overflow-hidden pt-52 md:pt-60 pb-20">
+    <div className="w-full min-h-screen relative overflow-hidden pt-52 pb-20">
       <MeshGradient
         className="w-full h-full absolute inset-0"
-        colors={["#000000", "#1a1a1a", "#D4A574", "#C68E52"]}
+        colors={["#000000", "#1a1a1a", "#D4A574", "#6B4E36"]}
         speed={0.5}
       />
 

@@ -7,20 +7,23 @@ import { toast } from "sonner";
 
 import { ModelIcons } from "@/lib/aiIcon";
 import { AIModel, AI_MODELS } from "@/lib/aiTypes";
+import { Template } from "@/templates";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import PromptEnhancerModal from "./PromptEnhancer";
+import PromptTemplate from "./PromptTemplate";
 
 export default function PromptInput() {
   const [prompt, setPrompt] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [selectedModel, setSelectedModel] = useState<AIModel>("gemini");
-  const [isEnhancerOpen, setIsEnhancerOpen] = useState(false);
-  const [designStyle, setDesignStyle] = useState<string>("");
+  const [isTemplateOpen, setIsTemplateOpen] = useState(false);
+  const [selectedTemplate, setSelectedTemplate] = useState<Template | null>(
+    null
+  );
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
   const [isDragging, setIsDragging] = useState(false);
   const router = useRouter();
@@ -100,12 +103,13 @@ export default function PromptInput() {
     }
   };
 
-  const handleApplyStyle = (style: string) => {
-    setDesignStyle(style);
-    if (prompt && !prompt.includes(style)) {
-      setPrompt((prev) => `${prev}\n\n${style}`);
+  const handleApplyTemplate = (template: Template) => {
+    setSelectedTemplate(template);
+    const templateNote = `@${template.name}`;
+    if (prompt && !prompt.includes(templateNote)) {
+      setPrompt((prev) => `${prev}\n\n${templateNote}`);
     } else if (!prompt) {
-      setPrompt(style);
+      setPrompt(templateNote);
     }
   };
 
@@ -235,8 +239,8 @@ export default function PromptInput() {
           value={prompt}
           onChange={(e) => setPrompt(e.target.value)}
           onKeyDown={handleKeyDown}
-          placeholder="Describe your landing page..."
-          className="w-full bg-transparent text-white text-sm placeholder:text-white/40 outline-none resize-none min-h-[60px] max-h-[200px]"
+          placeholder="Describe your landing page"
+          className="w-full bg-transparent text-white text-sm placeholder:text-white/40 outline-none resize-none min-h-[80px] max-h-[200px]"
           rows={1}
           disabled={isLoading}
           style={{
@@ -411,7 +415,7 @@ export default function PromptInput() {
 
           {/* Prompt Enhancer Button */}
           <button
-            onClick={() => setIsEnhancerOpen(true)}
+            onClick={() => setIsTemplateOpen(true)}
             disabled={isLoading}
             className="flex items-center gap-1 px-2 py-1 rounded-lg transition-colors text-white text-xs font-medium disabled:opacity-50 border border-white/10 hover:bg-white/10"
           >
@@ -428,7 +432,7 @@ export default function PromptInput() {
                 d="M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zm0 0h12a2 2 0 002-2v-4a2 2 0 00-2-2h-2.343M11 7.343l1.657-1.657a2 2 0 012.828 0l2.829 2.829a2 2 0 010 2.828l-8.486 8.485M7 17h.01"
               />
             </svg>
-            <span>Enhancer</span>
+            <span>Template</span>
           </button>
         </div>
 
@@ -476,12 +480,12 @@ export default function PromptInput() {
         </button>
       </div>
 
-      {/* Prompt Enhancer Modal */}
-      <PromptEnhancerModal
-        isOpen={isEnhancerOpen}
-        onClose={() => setIsEnhancerOpen(false)}
-        onApply={handleApplyStyle}
-        currentStyle={designStyle}
+      {/* Prompt Template */}
+      <PromptTemplate
+        isOpen={isTemplateOpen}
+        onClose={() => setIsTemplateOpen(false)}
+        onApply={handleApplyTemplate}
+        currentTemplateId={selectedTemplate?.id}
       />
     </div>
   );
