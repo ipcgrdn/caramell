@@ -114,7 +114,7 @@ export async function POST(
       .fullPage(false)
       .blockAds(true)
       .blockCookieBanners(true)
-      .delay(2);
+      .delay(5);
 
     // 스크린샷 생성
     const imageBlob = await client.take(options);
