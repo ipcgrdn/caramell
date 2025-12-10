@@ -338,10 +338,13 @@ export default function ProjectChat({
   };
 
   return (
-    <div className="h-full flex flex-col border-l border-white/20">
+    <div className="h-full min-h-0 flex flex-col border-l border-white/20 relative">
       {/* Messages */}
       <div
-        className="flex-1 overflow-auto p-6 space-y-4 relative z-10"
+        className="flex-1 min-h-0 overflow-auto p-6 space-y-4 relative z-10"
+        data-lenis-prevent
+        data-lenis-prevent-wheel
+        data-lenis-prevent-touch
         style={{ paddingBottom: inputHeight + 24 }}
       >
         {/* Conversation Messages */}
