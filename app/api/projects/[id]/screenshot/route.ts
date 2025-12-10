@@ -2,9 +2,7 @@ import { auth } from "@clerk/nextjs/server";
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import * as screenshotone from "screenshotone-api-sdk";
-
-import { writeFile } from "fs/promises";
-import { join } from "path";
+import { S3Client, PutObjectCommand } from "@aws-sdk/client-s3";
 
 /**
  * GET: ScreenshotOne이 접속하여 HTML을 가져가는 엔드포인트
@@ -122,14 +120,29 @@ export async function POST(
     const imageBlob = await client.take(options);
     const buffer = Buffer.from(await imageBlob.arrayBuffer());
 
-    // public/screenshots에 저장
+    // Cloudflare R2에 업로드
+    const r2Client = new S3Client({
+      region: "auto",
+      endpoint: process.env.CLOUDFLARE_R2_ENDPOINT,
+      credentials: {
+        accessKeyId: process.env.CLOUDFLARE_R2_ACCESS_KEY_ID!,
+        secretAccessKey: process.env.CLOUDFLARE_R2_SECRET_ACCESS_KEY!,
+      },
+    });
+
     const filename = `${id}.png`;
-    const filepath = join(process.cwd(), "public", "screenshots", filename);
-    await writeFile(filepath, buffer);
+    await r2Client.send(
+      new PutObjectCommand({
+        Bucket: process.env.CLOUDFLARE_R2_BUCKET_NAME,
+        Key: filename,
+        Body: buffer,
+        ContentType: "image/png",
+      })
+    );
 
     // 캐시 버스팅을 위한 타임스탬프 추가
     const timestamp = Date.now();
-    const screenshotPath = `/screenshots/${filename}?v=${timestamp}`;
+    const screenshotPath = `${process.env.CLOUDFLARE_R2_PUBLIC_URL}/${filename}?v=${timestamp}`;
 
     // DB 업데이트
     await prisma.project.update({
