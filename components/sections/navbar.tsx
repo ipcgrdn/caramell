@@ -96,6 +96,12 @@ export default function Navbar() {
               >
                 Pricing
               </Link>
+              <Link
+                href="https://discord.gg/3CAsg3RG"
+                className="hover:text-[#D4A574] transition-colors text-sm font-medium"
+              >
+                Contact
+              </Link>
             </div>
 
             {/* Right - Auth Buttons 오른쪽 고정 */}
@@ -205,6 +211,13 @@ export default function Navbar() {
                   className="text-lg font-medium hover:text-[#D4A574] transition-colors py-2"
                 >
                   Pricing
+                </Link>
+                <Link
+                  href="https://discord.gg/3CAsg3RG"
+                  onClick={() => setIsMobileMenuOpen(false)}
+                  className="text-lg font-medium hover:text-[#D4A574] transition-colors py-2"
+                >
+                  Contact
                 </Link>
               </div>
 

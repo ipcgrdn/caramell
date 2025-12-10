@@ -29,7 +29,7 @@ export default function BlogPage() {
   const posts = getAllPosts();
 
   return (
-    <div className="min-h-screen bg-[#2A2A2A] flex flex-col">
+    <div className="min-h-screen bg-[#6B4E36] flex flex-col">
       <Navbar />
 
       <div className="flex-1 pt-32 pb-24 px-4 md:px-8">

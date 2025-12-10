@@ -28,6 +28,12 @@ export default function Footer() {
                 Blog
               </Link>
               <Link
+                href="/showcase"
+                className="text-[#5A4030] hover:text-[#3D2A1F] transition-colors"
+              >
+                Showcase
+              </Link>
+              <Link
                 href="/pricing"
                 className="text-[#5A4030] hover:text-[#3D2A1F] transition-colors"
               >
@@ -35,6 +41,12 @@ export default function Footer() {
               </Link>
             </div>
             <div className="flex flex-col gap-2">
+              <Link
+                href="https://discord.gg/3CAsg3RG"
+                className="text-[#5A4030] hover:text-[#3D2A1F] transition-colors"
+              >
+                Contact
+              </Link>
               <Link
                 href="/privacy"
                 className="text-[#5A4030] hover:text-[#3D2A1F] transition-colors"
@@ -55,7 +67,7 @@ export default function Footer() {
       {/* Giant Typography - Center */}
       <div className="relative flex-1 flex items-center overflow-hidden">
         {/* Registered Symbol */}
-        <div className="absolute top-20 right-8 md:right-16 z-20">
+        <div className="absolute top-16 right-8 md:right-16 z-20">
           <div className="w-16 h-16 md:w-24 md:h-24 rounded-full border-2 border-[#6B4E36] flex items-center justify-center">
             <span className="text-2xl md:text-4xl font-light text-[#6B4E36]">
               R
@@ -68,7 +80,7 @@ export default function Footer() {
           className="flex flex-col select-none pointer-events-none leading-[0.85] tracking-tighter font-black"
           style={{ fontFamily: "var(--font-bungee), sans-serif" }}
         >
-          <span className="text-[20vw] md:text-[22vw] ml-[5vw] text-[#C97B63]">
+          <span className="text-[20vw] md:text-[22vw] ml-[5vw] text-[#D4A574]">
             CARA
           </span>
           <span className="text-[20vw] md:text-[22vw] ml-[30vw] text-[#6B4E36]">

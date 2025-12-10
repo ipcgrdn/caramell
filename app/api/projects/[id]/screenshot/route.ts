@@ -7,10 +7,47 @@ import { writeFile } from "fs/promises";
 import { join } from "path";
 
 /**
+ * GET: ScreenshotOne이 접속하여 HTML을 가져가는 엔드포인트
+ */
+export async function GET(
+  _req: Request,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  try {
+    const { id } = await params;
+
+    const project = await prisma.project.findUnique({
+      where: { id },
+      select: { files: true },
+    });
+
+    if (!project || !project.files) {
+      return new NextResponse("Project not found", { status: 404 });
+    }
+
+    const files = project.files as Record<string, string>;
+    const htmlContent = files["index.html"];
+
+    if (!htmlContent) {
+      return new NextResponse("No HTML file found", { status: 404 });
+    }
+
+    return new NextResponse(htmlContent, {
+      headers: {
+        "Content-Type": "text/html; charset=utf-8",
+      },
+    });
+  } catch (error) {
+    console.error("HTML preview error:", error);
+    return new NextResponse("Internal server error", { status: 500 });
+  }
+}
+
+/**
  * POST: ScreenshotOne SDK를 사용하여 프로젝트 스크린샷 생성
  */
 export async function POST(
-  _req: Request,
+  req: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
@@ -29,12 +66,13 @@ export async function POST(
       return NextResponse.json({ error: "User not found" }, { status: 404 });
     }
 
-    // 프로젝트 소유권 확인 및 파일 가져오기
+    // 프로젝트 소유권 확인
     const project = await prisma.project.findUnique({
       where: {
         id,
         userId: user.id,
       },
+      select: { id: true, files: true },
     });
 
     if (!project) {
@@ -44,17 +82,6 @@ export async function POST(
     if (!project.files) {
       return NextResponse.json(
         { error: "No files to screenshot" },
-        { status: 400 }
-      );
-    }
-
-    // HTML 파일 추출
-    const files = project.files as Record<string, string>;
-    const htmlContent = files["index.html"];
-
-    if (!htmlContent) {
-      return NextResponse.json(
-        { error: "No HTML file found" },
         { status: 400 }
       );
     }
@@ -71,11 +98,17 @@ export async function POST(
       );
     }
 
+    // 현재 요청의 origin으로 URL 구성
+    const url = new URL(req.url);
+    const baseUrl =
+      process.env.NEXT_PUBLIC_APP_URL || `${url.protocol}//${url.host}`;
+    const previewUrl = `${baseUrl}/api/projects/${id}/screenshot`;
+
     // ScreenshotOne SDK 클라이언트 생성
     const client = new screenshotone.Client(accessKey, secretKey);
 
-    // 옵션 설정
-    const options = screenshotone.TakeOptions.html(htmlContent)
+    // URL 방식으로 옵션 설정
+    const options = screenshotone.TakeOptions.url(previewUrl)
       .viewportWidth(1920)
       .viewportHeight(1080)
       .deviceScaleFactor(1)
