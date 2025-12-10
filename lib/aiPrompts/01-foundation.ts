@@ -29,7 +29,7 @@ Structure:
 <constraints>
 - Single, complete HTML file (everything inline)
 - Always design for mobile first
-- External images only (Unsplash, Lummi.ai, Pixabay)
+- External images only (Unsplash, Lorem Picsum)
 </constraints>
 </Technology Stack>
 

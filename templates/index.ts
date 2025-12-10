@@ -114,4 +114,10 @@ export const TEMPLATES: Template[] = [
     thumbnail: "/templates/thumbnails/raycast-bg.png",
     componentPath: "templates/components/raycast-bg.html",
   },
+  {
+    id: "visual-effects-slider",
+    name: "Visual Effects Slider",
+    thumbnail: "/templates/thumbnails/visual-effects-slider.png",
+    componentPath: "templates/components/visual-effects-slider.html",
+  }
 ];

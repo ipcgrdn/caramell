@@ -2,9 +2,10 @@ export const COMPONENTS = `
 <NAVBAR GUIDELINES>
 - Fixed at the top (sticky or fixed)
 - Transparent background initially
-- High-contrast text
+- Black or White text
 - Add background when scrolled (solid or backdrop blur)
 - Full-width or floating layout
+- Make this responsive. Add a hamburger menu for mobile.
 - iOS dock style navigation can be used
 </NAVBAR GUIDELINES>
 
@@ -15,29 +16,37 @@ Design Rules:
 - Use intentional negative space
 
 Background Options:
-1. Template-based design (if [TEMPLATE] is provided, it takes HIGHEST PRIORITY - adapt and remix the template while preserving its core visual style, animations, and layout patterns)
-2. Solid color (monochromatic background)
-3. Full-bleed image
-4. Neobrutalism (bold borders, hard shadows, high-contrast)
-5. Shader-based gradient animation (fluid morphing colors using WebGL/canvas effects)
-6. Particle field or matrix
-7. Fluid interaction
-8. Editorial typographic layout (magazine-inspired composition with oversized type treatments)
+- Template-based design (if [TEMPLATE] is provided, it takes HIGHEST PRIORITY - adapt and remix the template while preserving its core visual style, animations, and layout patterns)
+- Solid color (monochromatic background)
+- Full-bleed image
+- Neobrutalism (bold borders, hard shadows, high-contrast)
+- Fluid interaction
+- Editorial typographic layout (magazine-inspired composition with oversized type treatments)
 </HERO GUIDELINES>
 
 <FEATURE GUIDELINES>
 Design Rules:
 - Use images.
-- NEVER use icons. (Lucide, etc.)
-- If icons needed: custom SVG only
-- Maintain color harmony from Hero (complementary, analogous, triadic, monochromatic)
+- Maintain color harmony from Hero (complementary, analogous, monochromatic)
 
 Layout Options:
-1. Bento grid (asymmetric card grid)
-2. Parallax scroll (opposing directions)
-3. Scroll-linked reveal (sticky + progressive disclosure)
-4. Infinite marquee (logo bands, testimonials)
+- Parallax scroll (opposing directions)
+- Scroll-linked reveal (sticky + progressive disclosure)
+- Infinite marquee (logo bands, testimonials)
+- Bento grid (asymmetric card grid)
 </FEATURE GUIDELINES>
+
+<TESTIMONIAL GUIDELINES>
+Content Options (apply infinite marquee animation with duplicated items and alpha mask):
+- Logos: Partner/client brand logos scrolling horizontally
+- Tweets: X(Twitter) tweet embeds showcasing social proof
+- Comments: User reviews or testimonials as quote blocks
+</TESTIMONIAL GUIDELINES>
+
+<ADDITIONAL SECTIONS>
+- PRICING SECTION
+- CTA SECTION
+</ADDITIONAL SECTIONS>
 
 <FOOTER GUIDELINES>
 - Oversized typography (display-level font sizes for maximum impact)

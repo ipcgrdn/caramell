@@ -1,15 +1,15 @@
 export const ANIMATIONS = `
 <ANIMATIONS CORE RULES>
 <rule priority="critical">
-- Use simple hover effects.
-- Do NOT overuse animations.
+- Animate when in view observed, fade in, slide in, blur in, element by element. Use 'both' instead of 'forwards'. Don't use opacity 0.
+- Actively use the animation below.
 - Do adjust duration, stagger, ease, and other properties based on your specific design needs.
 </rule>
 </ANIMATIONS CORE RULES>
 
 <GSAP ANIMATION PATTERNS>
 
-## 1. ScrollSmoother
+## ScrollSmoother
 Creates buttery-smooth scrolling experience.
 
 **Required Plugin:**
@@ -41,7 +41,7 @@ ScrollSmoother.create({
 </script>
 \`\`\`
 
-## 2. Timeline
+## Timeline
 Chain multiple animations in sequence with overlap control.
 
 \`\`\`html
@@ -60,7 +60,7 @@ tl.to(".element-1", { opacity: 1 })
 </script>
 \`\`\`
 
-## 3. ScrollTrigger
+## ScrollTrigger
 Trigger animations based on scroll position.
 
 \`\`\`html
@@ -87,7 +87,7 @@ gsap.timeline({
 </script>
 \`\`\`
 
-## 4. SplitText
+## SplitText
 Split text into words and animate each word individually.
 
 **Required Plugin:**
@@ -124,7 +124,7 @@ gsap.to(textSplit.words, {
 </script>
 \`\`\`
 
-## 5. Horizontal Scroll + Pin
+## Horizontal Scroll + Pin
 Create horizontal scrolling sections.
 
 \`\`\`html
@@ -164,7 +164,7 @@ tl.to(".horizontal-section", {
 </script>
 \`\`\`
 
-## 6. ClipPath Sequential Reveal
+## ClipPath Sequential Reveal
 Reveal elements one by one using clip-path.
 
 \`\`\`html
@@ -203,7 +203,7 @@ revealTl
 </script>
 \`\`\`
 
-## 7. Circular ClipPath Expansion
+## Circular ClipPath Expansion
 Expand a circle from center to full screen.
 
 \`\`\`html
@@ -235,7 +235,7 @@ tl.to(".circle-box", {
 </script>
 \`\`\`
 
-## 8. Curtain Effect (Layer Overlay)
+## Curtain Effect (Layer Overlay)
 Create layered sections that slide over each other.
 
 \`\`\`html
@@ -269,7 +269,7 @@ const tl = gsap.timeline({
 </script>
 \`\`\`
 
-## 9. Stacked Cards Reveal + Pin
+## Stacked Cards Reveal + Pin
 Cards slide up sequentially and stack.
 
 \`\`\`html

@@ -1,10 +1,9 @@
 export const DESIGN_SYSTEMS = `
-<TYPOGRAPHY SYSTEMS>
+<FONTS SYSTEMS>
 Trending Fonts:
-- **Playfair Display**: Elegant, editorial serif
-- **Instrument Serif**: Modern serif, Gen Z favorite
-- **Roboto**: Clean, modern sans-serif
-- **Montserrat**: Clean, modern sans-serif
+- Playfair Display
+- Instrument Serif
+- Montserrat
 
 Italic Emphasis Trend:
 Mix italic words within sentences for emphasis:
@@ -23,24 +22,28 @@ Combine different font families within a single sentence for visual hierarchy:
 <!-- Example: Manrope (sans-serif) + Playfair Display (serif) -->
 \`\`\`
 
-Text Effects (for key messages only):
+Text Effects:
 - Typing animation with cursor
 - Encrypted text reveal (gibberish → clear text)
 - Text flip (character rotation)
-</TYPOGRAPHY SYSTEMS>
+</FONTS SYSTEMS>
 
 <COLOR SYSTEMS>
 - Never use gradients
 - Use Solid Colors or black or white.
 - Maintain the design language of the Hero section throughout the entire page.
+- Make the outlines subtle
 </COLOR SYSTEMS>
 
 <ICON SYSTEMS>
-- Never use icon libraries (Lucide, etc.)
 - Never use emoji icons
 - Never create LOGO
-- Use custom SVG icons instead
+- Always Use Iconify Solar Icon set
 </ICON SYSTEMS>
+
+<BUTTON SYSTEMS>
+- Add a 1px border beam animation around the pill-shaped button on hover.
+</BUTTON SYSTEMS>
 
 <COPYRIGHT SYSTEMS>
 - Use intuitive and compelling language in the description field that users can understand.
