@@ -210,7 +210,7 @@ Remember: Return ONLY valid JSON. No markdown blocks.`,
     }
 
     const response = await anthropic.messages.create({
-      model: "claude-sonnet-4-5-20250929",
+      model: "claude-opus-4-5-20251101",
       max_tokens: 16000,
       temperature: 0.7,
       system: systemPrompt,

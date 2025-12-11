@@ -132,15 +132,18 @@ export async function POST(
       );
     }
 
-    // Get chat history before saving new message
-    const previousMessages = await prisma.chatMessage.findMany({
-      where: { projectId: id },
-      orderBy: { createdAt: "asc" },
-      select: {
-        role: true,
-        content: true,
-      },
-    });
+    // Get chat history before saving new message (최근 10개만 - 성능 최적화)
+    const previousMessages = await prisma.chatMessage
+      .findMany({
+        where: { projectId: id },
+        orderBy: { createdAt: "desc" },
+        take: 10,
+        select: {
+          role: true,
+          content: true,
+        },
+      })
+      .then((msgs) => msgs.reverse()); // 시간순 정렬
 
     // Save user message to database
     await prisma.chatMessage.create({
