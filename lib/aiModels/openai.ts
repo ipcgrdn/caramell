@@ -130,14 +130,14 @@ export async function* generateWithOpenAI(
 }
 
 /**
- * OpenAI를 사용한 채팅 기반 코드 수정
+ * OpenAI를 사용한 스트리밍 채팅 기반 코드 수정
  */
-export async function chatWithOpenAI(
+export async function* chatWithOpenAIStream(
   userMessage: string,
   currentFiles: FileSystem,
   chatHistory?: ChatMessage[],
   attachments?: FileAttachment[]
-): Promise<ChatResponse> {
+): AsyncGenerator<string, ChatResponse, unknown> {
   const systemPrompt = `${CHAT_SYSTEM_PROMPT}
 
 CURRENT PROJECT FILES:
@@ -165,7 +165,6 @@ ${JSON.stringify(currentFiles, null, 2)}`;
     if (attachments && attachments.length > 0) {
       const contentParts: Array<OpenAI.Chat.Completions.ChatCompletionContentPart> = [];
 
-      // 텍스트 메시지를 먼저 추가
       contentParts.push({
         type: "text",
         text: `${userMessage}
@@ -173,7 +172,6 @@ ${JSON.stringify(currentFiles, null, 2)}`;
 Remember: Return ONLY valid JSON. No markdown blocks.`,
       });
 
-      // 이미지 파일들을 추가
       for (const file of attachments) {
         if (file.type.startsWith("image/")) {
           contentParts.push({
@@ -190,7 +188,6 @@ Remember: Return ONLY valid JSON. No markdown blocks.`,
         content: contentParts,
       });
     } else {
-      // 파일 첨부가 없는 경우 기존 방식
       messages.push({
         role: "user",
         content: `${userMessage}
@@ -199,35 +196,38 @@ Remember: Return ONLY valid JSON. No markdown blocks.`,
       });
     }
 
-    const response = await openai.chat.completions.create({
+    const stream = await openai.chat.completions.create({
       model: "gpt-5.1-2025-11-13",
       messages,
       max_completion_tokens: 16000,
+      stream: true,
     });
 
-    const textContent = response.choices[0]?.message?.content;
-    if (!textContent) {
-      throw new Error("No text content in response");
+    let fullText = "";
+
+    for await (const chunk of stream) {
+      const delta = chunk.choices[0]?.delta?.content;
+      if (delta) {
+        fullText += delta;
+        yield delta;
+      }
     }
 
-    const cleanedResponse = cleanJsonResponse(textContent);
+    const cleanedResponse = cleanJsonResponse(fullText);
 
     try {
       const result = JSON.parse(cleanedResponse);
 
-      // Validate response structure
       if (!result || typeof result !== 'object') {
         throw new Error("Response is not an object");
       }
 
-      // AI가 'response' 또는 'message' 필드로 반환할 수 있음
       const responseText = result.response || result.message;
       if (!responseText || typeof responseText !== 'string') {
         console.error("Invalid response structure:", result);
         throw new Error("Missing or invalid 'response' or 'message' field");
       }
 
-      // 필드명을 'response'로 정규화
       return {
         response: responseText,
         fileChanges: result.fileChanges
@@ -238,7 +238,7 @@ Remember: Return ONLY valid JSON. No markdown blocks.`,
       throw new Error("Failed to parse AI response");
     }
   } catch (error) {
-    console.error("OpenAI Chat error:", error);
-    throw new Error("Failed to get OpenAI response");
+    console.error("OpenAI Chat Stream error:", error);
+    throw new Error("Failed to get OpenAI streaming response");
   }
 }

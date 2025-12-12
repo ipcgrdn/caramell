@@ -3,7 +3,10 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 
 import { AIModel, ChatMessage, getModelCredits } from "@/lib/aiTypes";
-import { chatWithAI } from "@/lib/aiChat";
+import { chatWithAIStream } from "@/lib/aiChat";
+
+export const runtime = "nodejs";
+export const maxDuration = 300; // 5분
 
 // 중단된 요청 ID를 추적하는 Set (5분 후 자동 정리)
 const abortedRequests = new Map<string, number>();
@@ -74,11 +77,13 @@ export async function GET(
   }
 }
 
-// POST: Send a new message
+// POST: Send a new message (SSE Streaming)
 export async function POST(
   req: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  const encoder = new TextEncoder();
+
   try {
     const { userId } = await auth();
     const { id } = await params;
@@ -158,84 +163,137 @@ export async function POST(
     // Get current files
     const currentFiles = (project.files as Record<string, string>) || {};
 
-    // Call AI to get response with chat history for context
-    try {
-      const result = await chatWithAI(
-        message,
-        currentFiles,
-        previousMessages as ChatMessage[],
-        selectedModel as AIModel,
-        files
-      );
+    // SSE 스트리밍 응답
+    const stream = new ReadableStream({
+      async start(controller) {
+        try {
+          // 1. 시작 알림
+          controller.enqueue(
+            encoder.encode(
+              `data: ${JSON.stringify({ type: "start" })}\n\n`
+            )
+          );
 
-      // Validate response
-      if (!result || !result.response) {
-        throw new Error("AI returned invalid response: missing response field");
-      }
+          // 2. AI 스트리밍 생성
+          const generator = chatWithAIStream(
+            message,
+            currentFiles,
+            previousMessages as ChatMessage[],
+            selectedModel as AIModel,
+            files
+          );
 
-      // Merge fileChanges with current files (only update changed files)
-      let updatedFiles = { ...currentFiles };
-      let filesChanged: string[] = [];
+          let result;
 
-      if (result.fileChanges) {
-        // Merge: keep all existing files, update/add only changed ones
-        updatedFiles = {
-          ...currentFiles,
-          ...result.fileChanges,
-        };
-        filesChanged = Object.keys(result.fileChanges);
+          // 3. 청크 전송
+          while (true) {
+            const { done, value } = await generator.next();
 
-        await prisma.project.update({
-          where: { id },
-          data: {
-            files: updatedFiles,
-            updatedAt: new Date(),
-          },
-        });
-      }
+            if (done) {
+              result = value;
+              break;
+            }
 
-      // 중단된 요청인지 확인
-      if (requestId && abortedRequests.has(requestId)) {
-        abortedRequests.delete(requestId);
-        return NextResponse.json(
-          { error: "Request was aborted" },
-          { status: 499 } // Client Closed Request
-        );
-      }
+            // 청크 전송
+            controller.enqueue(
+              encoder.encode(
+                `data: ${JSON.stringify({ type: "chunk", text: value })}\n\n`
+              )
+            );
+          }
 
-      // Save assistant message + 크레딧 차감
-      await prisma.$transaction([
-        prisma.chatMessage.create({
-          data: {
-            projectId: id,
-            role: "assistant",
-            content: result.response,
-            filesChanged: filesChanged.length > 0 ? filesChanged : undefined,
-            aiModel: selectedModel,
-          },
-        }),
-        prisma.user.update({
-          where: { id: user.id },
-          data: {
-            credits: { decrement: requiredCredits },
-          },
-        }),
-      ]);
+          if (!result || !result.response) {
+            throw new Error("AI returned invalid response");
+          }
 
-      return NextResponse.json({
-        response: result.response,
-        filesUpdated: filesChanged.length > 0,
-        filesChanged,
-        updatedFiles: updatedFiles,
-        requestId,
-      });
-    } catch (error) {
-      console.error("Chat AI error:", error);
-      return NextResponse.json(
-        { error: "Failed to get AI response" },
-        { status: 500 }
-      );
-    }
+          // 4. 파일 변경사항 처리
+          let updatedFiles = { ...currentFiles };
+          let filesChanged: string[] = [];
+
+          if (result.fileChanges) {
+            updatedFiles = {
+              ...currentFiles,
+              ...result.fileChanges,
+            };
+            filesChanged = Object.keys(result.fileChanges);
+
+            await prisma.project.update({
+              where: { id },
+              data: {
+                files: updatedFiles,
+                updatedAt: new Date(),
+              },
+            });
+          }
+
+          // 5. 중단된 요청인지 확인
+          if (requestId && abortedRequests.has(requestId)) {
+            abortedRequests.delete(requestId);
+            controller.enqueue(
+              encoder.encode(
+                `data: ${JSON.stringify({ type: "error", error: "Request was aborted" })}\n\n`
+              )
+            );
+            controller.close();
+            return;
+          }
+
+          // 6. DB 저장 + 크레딧 차감
+          await prisma.$transaction([
+            prisma.chatMessage.create({
+              data: {
+                projectId: id,
+                role: "assistant",
+                content: result.response,
+                filesChanged: filesChanged.length > 0 ? filesChanged : undefined,
+                aiModel: selectedModel,
+              },
+            }),
+            prisma.user.update({
+              where: { id: user.id },
+              data: {
+                credits: { decrement: requiredCredits },
+              },
+            }),
+          ]);
+
+          // 7. 완료 알림
+          controller.enqueue(
+            encoder.encode(
+              `data: ${JSON.stringify({
+                type: "complete",
+                response: result.response,
+                filesUpdated: filesChanged.length > 0,
+                filesChanged,
+                updatedFiles,
+                requestId,
+              })}\n\n`
+            )
+          );
+
+          controller.close();
+        } catch (error) {
+          console.error("Chat streaming error:", error);
+          controller.enqueue(
+            encoder.encode(
+              `data: ${JSON.stringify({
+                type: "error",
+                error: "Failed to get AI response",
+              })}\n\n`
+            )
+          );
+          controller.close();
+        }
+      },
+    });
+
+    return new Response(stream, {
+      headers: {
+        "Content-Type": "text/event-stream",
+        "Cache-Control": "no-cache",
+        Connection: "keep-alive",
+      },
+    });
   } catch (error) {
     console.error("Error:", error);
     return NextResponse.json(

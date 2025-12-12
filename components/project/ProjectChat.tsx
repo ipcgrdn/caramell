@@ -16,6 +16,8 @@ import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import rehypeHighlight from "rehype-highlight";
 import "highlight.js/styles/github-dark.css";
+import { Prism as SyntaxHighlighter } from "react-syntax-highlighter";
+import { vscDarkPlus } from "react-syntax-highlighter/dist/esm/styles/prism";
 
 interface ProjectChatProps {
   projectId: string;
@@ -42,7 +44,9 @@ export default function ProjectChat({
   const [selectedModel, setSelectedModel] = useState<AIModel>("gemini");
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
   const [isDragging, setIsDragging] = useState(false);
+  const [streamingCode, setStreamingCode] = useState<string>("");
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const streamingRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const abortControllerRef = useRef<AbortController | null>(null);
   const latestRequestIdRef = useRef<string | null>(null);
@@ -110,6 +114,7 @@ export default function ProjectChat({
     setInput("");
     setSelectedFiles([]);
     setIsLoading(true);
+    setStreamingCode("");
 
     // 고유한 요청 ID 생성
     const requestId = Date.now().toString();
@@ -135,13 +140,12 @@ export default function ProjectChat({
           message: messageToSend,
           aiModel: modelToUse,
           files: encodedFiles.length > 0 ? encodedFiles : undefined,
-          requestId, // 요청 ID 전달
+          requestId,
         }),
         signal: abortController.signal,
       });
 
       if (!response.ok) {
-        // 크레딧 부족 에러 처리
         if (response.status === 402) {
           toast.error("Not enough credits", {
             action: {
@@ -149,40 +153,67 @@ export default function ProjectChat({
               onClick: () => router.push("/pricing"),
             },
           });
+          setIsLoading(false);
           return;
         }
         throw new Error("Failed to get response");
       }
 
-      const data = await response.json();
+      // SSE 스트리밍 처리
+      const reader = response.body?.getReader();
+      if (!reader) throw new Error("No reader available");
 
-      // 최신 요청이 아니면 무시 (이중 검증: 클라이언트 & 서버)
-      if (
-        latestRequestIdRef.current !== requestId ||
-        data.requestId !== requestId
-      ) {
-        return;
-      }
+      const decoder = new TextDecoder();
+      let buffer = "";
 
-      const assistantMessage: Message = {
-        role: "assistant",
-        content: data.response,
-      };
-      setMessages((prev) => [...prev, assistantMessage]);
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
 
-      // If files were updated, notify parent with updated files
-      if (data.filesUpdated && data.updatedFiles && onFilesUpdate) {
-        onFilesUpdate(data.updatedFiles);
+        buffer += decoder.decode(value, { stream: true });
+        const lines = buffer.split("\n\n");
+        buffer = lines.pop() || "";
+
+        for (const line of lines) {
+          if (line.startsWith("data: ")) {
+            try {
+              const data = JSON.parse(line.slice(6));
+
+              if (data.type === "chunk") {
+                setStreamingCode((prev) => prev + data.text);
+              } else if (data.type === "complete") {
+                // 최신 요청인지 확인
+                if (latestRequestIdRef.current !== requestId) return;
+
+                const assistantMessage: Message = {
+                  role: "assistant",
+                  content: data.response,
+                };
+                setMessages((prev) => [...prev, assistantMessage]);
+
+                if (data.filesUpdated && data.updatedFiles && onFilesUpdate) {
+                  onFilesUpdate(data.updatedFiles);
+                }
+
+                setIsLoading(false);
+                setStreamingCode("");
+              } else if (data.type === "error") {
+                throw new Error(data.error);
+              }
+            } catch (parseError) {
+              console.error("Parse error:", parseError);
+            }
+          }
+        }
       }
     } catch (error) {
       if (error instanceof Error && error.name === "AbortError") {
+        setIsLoading(false);
+        setStreamingCode("");
         return;
       }
 
-      // 최신 요청이 아니면 에러도 무시
-      if (latestRequestIdRef.current !== requestId) {
-        return;
-      }
+      if (latestRequestIdRef.current !== requestId) return;
 
       console.error("Chat error:", error);
       const errorMessage: Message = {
@@ -190,11 +221,9 @@ export default function ProjectChat({
         content: "Sorry, Please try again.",
       };
       setMessages((prev) => [...prev, errorMessage]);
+      setIsLoading(false);
+      setStreamingCode("");
     } finally {
-      // 최신 요청일 때만 로딩 해제
-      if (latestRequestIdRef.current === requestId) {
-        setIsLoading(false);
-      }
       abortControllerRef.current = null;
     }
   };
@@ -485,10 +514,39 @@ export default function ProjectChat({
           </div>
         ))}
 
-        {/* Loading State */}
+        {/* Loading State - 스트리밍 코드 박스 */}
         {isLoading && (
-          <div className="flex items-center pl-4 mb-8">
-            <MorphingSquare className="w-4 h-4" />
+          <div className="pl-4 mb-8 flex flex-col gap-4">
+            <div className="flex items-center gap-4">
+              <MorphingSquare className="w-3 h-3 bg-[#D4A574]" />
+              <span className="text-white text-sm font-medium">
+                Caramelizing...
+              </span>
+            </div>
+            {streamingCode && (
+              <div className="bg-white/5 border border-[#D4A574]/50 rounded-2xl p-4 max-w-4xl overflow-hidden">
+                <div
+                  ref={streamingRef}
+                  className="h-24 overflow-hidden relative [&_pre]:bg-transparent! [&_pre]:m-0! [&_pre]:p-1! [&_pre]:whitespace-pre-wrap! [&_pre]:break-all! [&_code]:whitespace-pre-wrap! [&_code]:break-all!"
+                >
+                  <SyntaxHighlighter
+                    language="tsx"
+                    style={vscDarkPlus}
+                    wrapLongLines
+                    customStyle={{
+                      background: "transparent",
+                      margin: 0,
+                      padding: "0.25rem",
+                      fontSize: "10px",
+                      whiteSpace: "pre-wrap",
+                      wordBreak: "break-all",
+                    }}
+                  >
+                    {streamingCode.slice(-500) || " "}
+                  </SyntaxHighlighter>
+                </div>
+              </div>
+            )}
           </div>
         )}
 

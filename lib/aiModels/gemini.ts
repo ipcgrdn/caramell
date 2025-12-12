@@ -138,14 +138,14 @@ export async function* generateWithGemini(
 }
 
 /**
- * Gemini를 사용한 채팅 기반 코드 수정
+ * Gemini를 사용한 스트리밍 채팅 기반 코드 수정
  */
-export async function chatWithGemini(
+export async function* chatWithGeminiStream(
   userMessage: string,
   currentFiles: FileSystem,
   chatHistory?: ChatMessage[],
   attachments?: FileAttachment[]
-): Promise<ChatResponse> {
+): AsyncGenerator<string, ChatResponse, unknown> {
   const systemPrompt = `${CHAT_SYSTEM_PROMPT}
 
 CURRENT PROJECT FILES:
@@ -172,11 +172,7 @@ ${JSON.stringify(currentFiles, null, 2)}`;
       },
       {
         role: "model",
-        parts: [
-          {
-            text: "Yes",
-          },
-        ],
+        parts: [{ text: "Yes" }],
       },
     ];
 
@@ -192,23 +188,20 @@ ${JSON.stringify(currentFiles, null, 2)}`;
 
     const chat = model.startChat({ history });
 
-    // 현재 메시지 구성 (파일 첨부가 있는 경우 배열 형식)
-    if (attachments && attachments.length > 0) {
-      const messageParts: Array<
-        { text: string } | { inlineData: { mimeType: string; data: string } }
-      > = [];
+    // 현재 메시지 구성
+    const messageParts: Array<
+      { text: string } | { inlineData: { mimeType: string; data: string } }
+    > = [];
 
-      // 텍스트 메시지를 먼저 추가
-      messageParts.push({
-        text: `${userMessage}
+    messageParts.push({
+      text: `${userMessage}
 
 Remember: Return ONLY valid JSON. No markdown blocks.`,
-      });
+    });
 
-      // 이미지 파일들을 추가
+    if (attachments && attachments.length > 0) {
       for (const file of attachments) {
         if (file.type.startsWith("image/")) {
-          // data:image/jpeg;base64,... 형식에서 base64 부분만 추출
           const base64Data = file.data.split(",")[1] || file.data;
           messageParts.push({
             inlineData: {
@@ -218,83 +211,44 @@ Remember: Return ONLY valid JSON. No markdown blocks.`,
           });
         }
       }
+    }
 
-      const result = await chat.sendMessage(messageParts);
-      const textContent = result.response.text();
-      if (!textContent) {
-        throw new Error("No text content in response");
+    const result = await chat.sendMessageStream(messageParts);
+
+    let fullText = "";
+
+    for await (const chunk of result.stream) {
+      const text = chunk.text();
+      fullText += text;
+      yield text;
+    }
+
+    const cleanedResponse = cleanJsonResponse(fullText);
+
+    try {
+      const parsedResult = JSON.parse(cleanedResponse);
+
+      if (!parsedResult || typeof parsedResult !== 'object') {
+        throw new Error("Response is not an object");
       }
 
-      // JSON 파싱
-      const cleanedResponse = cleanJsonResponse(textContent);
-
-      try {
-        const parsedResult = JSON.parse(cleanedResponse);
-
-        // Validate response structure
-        if (!parsedResult || typeof parsedResult !== 'object') {
-          throw new Error("Response is not an object");
-        }
-
-        // AI가 'response' 또는 'message' 필드로 반환할 수 있음
-        const responseText = parsedResult.response || parsedResult.message;
-        if (!responseText || typeof responseText !== 'string') {
-          console.error("Invalid response structure:", parsedResult);
-          throw new Error("Missing or invalid 'response' or 'message' field");
-        }
-
-        // 필드명을 'response'로 정규화
-        return {
-          response: responseText,
-          fileChanges: parsedResult.fileChanges
-        } as ChatResponse;
-      } catch (parseError) {
-        console.error("JSON Parse error:", parseError);
-        console.error("Response was:", cleanedResponse);
-        throw new Error("Failed to parse AI response");
-      }
-    } else {
-      // 파일 첨부가 없는 경우 기존 방식
-      const result = await chat.sendMessage(`${userMessage}
-
-Remember: Return ONLY valid JSON. No markdown blocks.`);
-
-      const textContent = result.response.text();
-      if (!textContent) {
-        throw new Error("No text content in response");
+      const responseText = parsedResult.response || parsedResult.message;
+      if (!responseText || typeof responseText !== 'string') {
+        console.error("Invalid response structure:", parsedResult);
+        throw new Error("Missing or invalid 'response' or 'message' field");
       }
 
-      // JSON 파싱
-      const cleanedResponse = cleanJsonResponse(textContent);
-
-      try {
-        const parsedResult = JSON.parse(cleanedResponse);
-
-        // Validate response structure
-        if (!parsedResult || typeof parsedResult !== 'object') {
-          throw new Error("Response is not an object");
-        }
-
-        // AI가 'response' 또는 'message' 필드로 반환할 수 있음
-        const responseText = parsedResult.response || parsedResult.message;
-        if (!responseText || typeof responseText !== 'string') {
-          console.error("Invalid response structure:", parsedResult);
-          throw new Error("Missing or invalid 'response' or 'message' field");
-        }
-
-        // 필드명을 'response'로 정규화
-        return {
-          response: responseText,
-          fileChanges: parsedResult.fileChanges
-        } as ChatResponse;
-      } catch (parseError) {
-        console.error("JSON Parse error:", parseError);
-        console.error("Response was:", cleanedResponse);
-        throw new Error("Failed to parse AI response");
-      }
+      return {
+        response: responseText,
+        fileChanges: parsedResult.fileChanges
+      } as ChatResponse;
+    } catch (parseError) {
+      console.error("JSON Parse error:", parseError);
+      console.error("Response was:", cleanedResponse);
+      throw new Error("Failed to parse AI response");
     }
   } catch (error) {
-    console.error("Gemini Chat error:", error);
-    throw new Error("Failed to get Gemini response");
+    console.error("Gemini Chat Stream error:", error);
+    throw new Error("Failed to get Gemini streaming response");
   }
 }
