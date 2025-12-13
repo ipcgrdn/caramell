@@ -49,5 +49,6 @@ Text Effects:
 <COPYRIGHT GUIDELINES>
 - Use intuitive and compelling language in the description field that users can understand.
 - Use marketing language that aligns with the website's purpose.
+- NEVER include UI interaction hints or instructional text that tells users how to navigate (e.g., scrolling, clicking, dragging prompts). Let the design speak for itself.
 </COPYRIGHT GUIDELINES>
 `;
