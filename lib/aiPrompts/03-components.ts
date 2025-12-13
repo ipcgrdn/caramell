@@ -41,8 +41,8 @@ Required Rules:
 - Maintain color harmony from Hero (complementary, analogous, monochromatic)
 
 Layout Options (choose one):
-- Parallax scroll (opposing directions)
 - Scroll-linked reveal (sticky + progressive disclosure)
+- Parallax scroll (opposing directions)
 - Infinite marquee (logo bands, testimonials)
 - Bento grid (asymmetric card grid)
 </FEATURE>
@@ -56,12 +56,13 @@ Content Options (choose one, apply infinite marquee animation with duplicated it
 
 <ADDITIONAL SECTIONS>
 - PRICING SECTION (optional)
-- CTA SECTION (essential)
+- CTA SECTION (required)
 </ADDITIONAL SECTIONS>
 
 <FOOTER>
 Required Rules:
 - Oversized typography (display-level font sizes for maximum impact)
 - Minimal content with strong visual impact
+- Text color must be monotone (no multi-colored text)
 </FOOTER>
 </SECTION COMPONENTS>`;
