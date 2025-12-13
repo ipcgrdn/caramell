@@ -37,7 +37,7 @@ Background Options (choose one):
 
 <FEATURE>
 Required Rules:
-- Use images
+- Use images (unsplash, lorem picsum)
 - Maintain color harmony from Hero (complementary, analogous, monochromatic)
 
 Layout Options (choose one):
@@ -55,9 +55,8 @@ Content Options (choose one, apply infinite marquee animation with duplicated it
 </TESTIMONIAL>
 
 <ADDITIONAL SECTIONS>
-Optional sections to include:
-- PRICING SECTION
-- CTA SECTION
+- PRICING SECTION (optional)
+- CTA SECTION (essential)
 </ADDITIONAL SECTIONS>
 
 <FOOTER>

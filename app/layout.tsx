@@ -9,6 +9,7 @@ import Script from "next/script";
 import { Analytics } from "@vercel/analytics/next";
 import { SpeedInsights } from "@vercel/speed-insights/next";
 import LenisProvider from "@/components/providers/LenisProvider";
+import PostHogProvider from "@/components/providers/PostHogProvider";
 
 const GA_TRACKING_ID = "G-D0Q1T5F7QG";
 
@@ -134,12 +135,14 @@ export default function RootLayout({
         <body
           className={`${geistSans.variable} ${playfair.variable} ${bungee.variable} antialiased`}
         >
-          <LenisProvider>
-            <Toaster position="bottom-right" />
-            {children}
-            <Analytics />
-            <SpeedInsights />
-          </LenisProvider>
+          <PostHogProvider>
+            <LenisProvider>
+              <Toaster position="bottom-right" />
+              {children}
+              <Analytics />
+              <SpeedInsights />
+            </LenisProvider>
+          </PostHogProvider>
         </body>
       </html>
     </ClerkProvider>
