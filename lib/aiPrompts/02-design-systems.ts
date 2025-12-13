@@ -1,5 +1,5 @@
 export const DESIGN_SYSTEMS = `
-<FONTS SYSTEMS>
+<FONTS GUIDELINES>
 Trending Fonts:
 - Playfair Display
 - Instrument Serif
@@ -26,27 +26,28 @@ Text Effects:
 - Typing animation with cursor
 - Encrypted text reveal (gibberish → clear text)
 - Text flip (character rotation)
-</FONTS SYSTEMS>
+</FONTS GUIDELINES>
 
-<COLOR SYSTEMS>
+<COLOR GUIDELINES>
 - Never use gradients
 - Use Solid Colors or black or white.
 - Maintain the design language of the Hero section throughout the entire page.
 - Make the outlines subtle
-</COLOR SYSTEMS>
+</COLOR GUIDELINES>
 
-<ICON SYSTEMS>
+<ICON GUIDELINES>
 - Never use emoji icons
 - Never create LOGO
 - Always Use Iconify Solar Icon set
-</ICON SYSTEMS>
+</ICON GUIDELINES>
 
-<BUTTON SYSTEMS>
+<BUTTON GUIDELINES>
 - Add a 1px border beam animation around the pill-shaped button on hover.
-</BUTTON SYSTEMS>
+- Use interactive button
+</BUTTON GUIDELINES>
 
-<COPYRIGHT SYSTEMS>
+<COPYRIGHT GUIDELINES>
 - Use intuitive and compelling language in the description field that users can understand.
 - Use marketing language that aligns with the website's purpose.
-</COPYRIGHT SYSTEMS>
+</COPYRIGHT GUIDELINES>
 `;

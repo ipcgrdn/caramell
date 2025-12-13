@@ -1,308 +1,64 @@
 export const ANIMATIONS = `
-<ANIMATIONS CORE RULES>
-<rule priority="critical">
-- Animate when in view observed, fade in, slide in, blur in, element by element. Use 'both' instead of 'forwards'. Don't use opacity 0.
-- Actively use the animation below.
-- Do adjust duration, stagger, ease, and other properties based on your specific design needs.
-</rule>
-</ANIMATIONS CORE RULES>
+<ANIMATION SYSTEM>
+<selection-instruction priority="critical">
+Below are GSAP animation OPTIONS you can use.
+Select MULTIPLE animations that complement each other and fit the design.
+At minimum, use 2-3 animation patterns throughout the page.
+These are tools in your toolkit - combine them creatively.
+</selection-instruction>
 
-<GSAP ANIMATION PATTERNS>
+<core-rules priority="critical">
+- Animate elements when they enter viewport (fade in, slide in, blur in)
+- Use 'both' instead of 'forwards' for animation-fill-mode
+- Don't use opacity: 0 as initial state
+- Adjust duration, stagger, ease based on design needs
+</core-rules>
 
-## ScrollSmoother
-Creates buttery-smooth scrolling experience.
+<ANIMATION OPTIONS>
 
-**Required Plugin:**
-\`\`\`html
-<script src="https://unpkg.com/gsap@3/dist/ScrollSmoother.min.js"></script>
-\`\`\`
+## Option 1: ScrollSmoother
+Smooth page scrolling effect.
+Plugin: unpkg.com/gsap@3/dist/ScrollSmoother.min.js
+Structure: #smooth-wrapper > #smooth-content (all content inside)
+ScrollSmoother.create({ smooth: 1-10, effects: true })
 
-**HTML Structure (Required):**
-\`\`\`html
-<div id="smooth-wrapper">
-  <div id="smooth-content">
-    <!-- All page content goes here -->
-    <section class="h-screen bg-black text-white flex items-center justify-center">
-      <h1 class="text-6xl font-serif">Smooth Scroll Demo</h1>
-    </section>
-    <section class="h-screen bg-white text-black flex items-center justify-center">
-      <h1 class="text-6xl font-serif">Another Section</h1>
-    </section>
-  </div>
-</div>
+## Option 2: Timeline
+Chain animations sequentially.
+const tl = gsap.timeline()
+tl.to(el1, {...}).to(el2, {...}, "-=0.5").from(el3, {...})
+Position: "-=0.5" overlap, "+=0.5" gap, "<" with prev start
 
-<script>
-gsap.registerPlugin(ScrollSmoother);
+## Option 3: ScrollTrigger
+Scroll-based animation trigger.
+gsap.timeline({ scrollTrigger: { trigger, start, end, scrub, pin } }).to(...)
+start/end: "top center", "bottom top", "1% top", "+=500px"
+scrub: true or number(smoothing), pin: true to fix element
 
-ScrollSmoother.create({
-  smooth: 10,       // Smoothness level (10 = very smooth and slow scroll)
-  effects: true,    // Enable data-speed and data-lag attributes
-});
-</script>
-\`\`\`
+## Option 4: SplitText
+Word/character animation.
+Plugin: unpkg.com/gsap@3/dist/SplitText.min.js
+const split = SplitText.create(".text", { type: "words" })
+gsap.to(split.words, { color: "#fff", stagger: 0.1, scrollTrigger: {...} })
 
-## Timeline
-Chain multiple animations in sequence with overlap control.
+## Option 5: Horizontal Scroll
+Horizontal scrolling section.
+const scrollAmount = container.scrollWidth - window.innerWidth
+Pin section, animate x: -scrollAmount, end: +=scrollAmount
 
-\`\`\`html
-<div class="container h-screen flex items-center justify-center gap-8">
-  <div class="element-1 w-32 h-32 bg-blue-500 opacity-0"></div>
-  <div class="element-2 w-32 h-32 bg-red-500"></div>
-  <div class="element-3 w-32 h-32 bg-green-500"></div>
-</div>
+## Option 6: ClipPath Reveal
+Reveal elements with clip-path animations.
+Polygon wipe: "polygon(0% 0%, 0% 0%, 0% 100%, 0% 100%)" → "polygon(0% 0%, 100% 0%, 100% 100%, 0% 100%)"
+Circle expand: "circle(6% at 50% 50%)" → "circle(100% at 50% 50%)"
+Set initial in style attr, animate clipPath property
 
-<script>
-const tl = gsap.timeline({ delay: 1 });
+## Option 7: Curtain Effect
+Section slides over another section.
+gsap.set(".top-section", { marginTop: "-100vh" })
+Pin bottom section, top slides over naturally
 
-tl.to(".element-1", { opacity: 1 })
-  .to(".element-2", { x: 100 }, "-=0.5")  // Overlap by 0.5s
-  .from(".element-3", { y: 50 });
-</script>
-\`\`\`
+## Option 8: Stacked Cards
+Cards stack on top of each other while scrolling.
+from({ yPercent: 150, stagger: 0.2 }) with pin + scrub
 
-## ScrollTrigger
-Trigger animations based on scroll position.
-
-\`\`\`html
-<section class="hero-container h-screen bg-black text-white flex items-center justify-center">
-  <h1 class="text-8xl font-serif">Scroll Down</h1>
-</section>
-
-<section class="h-screen bg-gray-100"></section>
-
-<script>
-gsap.registerPlugin(ScrollTrigger);
-
-gsap.timeline({
-  scrollTrigger: {
-    trigger: ".hero-container",
-    start: "1% top",      // When hero is 1% from top
-    end: "bottom top",    // When hero bottom hits viewport top
-    scrub: true,          // Sync animation with scroll
-  }
-}).to(".hero-container", {
-  rotate: 7,
-  scale: 0.9
-});
-</script>
-\`\`\`
-
-## SplitText
-Split text into words and animate each word individually.
-
-**Required Plugin:**
-\`\`\`html
-<script src="https://unpkg.com/gsap@3/dist/SplitText.min.js"></script>
-\`\`\`
-
-\`\`\`html
-<section class="text-section h-screen flex items-center justify-center bg-black">
-  <h2 class="split-text text-6xl font-serif text-gray-500 max-w-4xl text-center leading-tight">
-    This text will change color word by word as you scroll through
-  </h2>
-</section>
-
-<script>
-gsap.registerPlugin(SplitText, ScrollTrigger);
-
-// Split text into words
-const textSplit = SplitText.create(".split-text", {
-  type: "words",
-});
-
-// Animate each word
-gsap.to(textSplit.words, {
-  color: "#faeade",     // Change to light color
-  stagger: 1,           // 1s delay between each word
-  scrollTrigger: {
-    trigger: ".text-section",
-    start: "top center",
-    end: "30% center",
-    scrub: true,
-  },
-});
-</script>
-\`\`\`
-
-## Horizontal Scroll + Pin
-Create horizontal scrolling sections.
-
-\`\`\`html
-<section class="horizontal-section h-screen overflow-hidden">
-  <div class="slider-container flex gap-8 h-full items-center">
-    <div class="slide min-w-screen h-96 bg-red-500 flex items-center justify-center">
-      <h2 class="text-6xl font-serif text-white">Slide 1</h2>
-    </div>
-    <div class="slide min-w-screen h-96 bg-blue-500 flex items-center justify-center">
-      <h2 class="text-6xl font-serif text-white">Slide 2</h2>
-    </div>
-    <div class="slide min-w-screen h-96 bg-green-500 flex items-center justify-center">
-      <h2 class="text-6xl font-serif text-white">Slide 3</h2>
-    </div>
-  </div>
-</section>
-
-<script>
-gsap.registerPlugin(ScrollTrigger);
-
-const slider = document.querySelector(".slider-container");
-const scrollAmount = slider.scrollWidth - window.innerWidth;
-
-const tl = gsap.timeline({
-  scrollTrigger: {
-    trigger: ".horizontal-section",
-    start: "2% top",
-    end: \`+=\${scrollAmount + 1500}px\`,
-    scrub: true,
-    pin: true,  // Pin the section while scrolling
-  }
-});
-
-tl.to(".horizontal-section", {
-  x: \`-\${scrollAmount + 1500}px\`,  // Move left
-});
-</script>
-\`\`\`
-
-## ClipPath Sequential Reveal
-Reveal elements one by one using clip-path.
-
-\`\`\`html
-<section class="benefit-section h-screen bg-white flex flex-col items-center justify-center gap-4">
-  <h2 class="title first-title text-6xl font-serif" style="clip-path: polygon(0% 0%, 0% 0%, 0% 100%, 0% 100%);">
-    First Benefit
-  </h2>
-  <h2 class="title second-title text-6xl font-serif" style="clip-path: polygon(0% 0%, 0% 0%, 0% 100%, 0% 100%);">
-    Second Benefit
-  </h2>
-  <h2 class="title third-title text-6xl font-serif" style="clip-path: polygon(0% 0%, 0% 0%, 0% 100%, 0% 100%);">
-    Third Benefit
-  </h2>
-  <h2 class="title fourth-title text-6xl font-serif" style="clip-path: polygon(0% 0%, 0% 0%, 0% 100%, 0% 100%);">
-    Fourth Benefit
-  </h2>
-</section>
-
-<script>
-gsap.registerPlugin(ScrollTrigger);
-
-const revealTl = gsap.timeline({
-  scrollTrigger: {
-    trigger: ".benefit-section",
-    start: "top 60%",
-    end: "top top",
-    scrub: 1.5,
-  }
-});
-
-revealTl
-  .to(".first-title", { clipPath: "polygon(0% 0%, 100% 0%, 100% 100%, 0% 100%)" })
-  .to(".second-title", { clipPath: "polygon(0% 0%, 100% 0%, 100% 100%, 0% 100%)" })
-  .to(".third-title", { clipPath: "polygon(0% 0%, 100% 0%, 100% 100%, 0% 100%)" })
-  .to(".fourth-title", { clipPath: "polygon(0% 0%, 100% 0%, 100% 100%, 0% 100%)" });
-</script>
-\`\`\`
-
-## Circular ClipPath Expansion
-Expand a circle from center to full screen.
-
-\`\`\`html
-<section class="circle-section h-screen bg-black flex items-center justify-center">
-  <div class="circle-box w-full h-full bg-white flex items-center justify-center"
-       style="clip-path: circle(6% at 50% 50%);">
-    <h2 class="text-6xl font-serif">Watch it grow</h2>
-  </div>
-</section>
-
-<script>
-gsap.registerPlugin(ScrollTrigger);
-
-const tl = gsap.timeline({
-  scrollTrigger: {
-    trigger: ".circle-section",
-    start: "-15% top",
-    end: "200% top",
-    scrub: 1.5,
-    pin: true,
-  }
-});
-
-tl.to(".circle-box", {
-  clipPath: "circle(100% at 50% 50%)",
-  // Initial: circle(6% at 50% 50%)
-  // Final: circle(100% at 50% 50%)
-});
-</script>
-\`\`\`
-
-## Curtain Effect (Layer Overlay)
-Create layered sections that slide over each other.
-
-\`\`\`html
-<!-- Bottom layer (gets pinned) -->
-<section class="bottom-section h-screen bg-blue-500 flex items-center justify-center">
-  <h2 class="text-6xl font-serif text-white">Bottom Layer</h2>
-</section>
-
-<!-- Top layer (slides over) -->
-<section class="top-section h-screen bg-white flex items-center justify-center">
-  <h2 class="text-6xl font-serif">Top Layer</h2>
-</section>
-
-<script>
-gsap.registerPlugin(ScrollTrigger);
-
-// Pull top layer up initially
-gsap.set(".top-section", {
-  marginTop: "-140vh",  // Pull up by 140vh
-});
-
-// Pin bottom layer while top layer slides over
-const tl = gsap.timeline({
-  scrollTrigger: {
-    trigger: ".bottom-section",
-    start: "-15% top",
-    end: "200% top",
-    pin: true,  // Pin the section
-  }
-});
-</script>
-\`\`\`
-
-## Stacked Cards Reveal + Pin
-Cards slide up sequentially and stack.
-
-\`\`\`html
-<section class="cards-section h-screen bg-gray-100 flex items-center justify-center gap-8">
-  <div class="card w-80 h-96 bg-white rounded-3xl shadow-2xl flex items-center justify-center">
-    <p class="text-2xl font-serif">Card 1</p>
-  </div>
-  <div class="card w-80 h-96 bg-white rounded-3xl shadow-2xl flex items-center justify-center">
-    <p class="text-2xl font-serif">Card 2</p>
-  </div>
-  <div class="card w-80 h-96 bg-white rounded-3xl shadow-2xl flex items-center justify-center">
-    <p class="text-2xl font-serif">Card 3</p>
-  </div>
-</section>
-
-<script>
-gsap.registerPlugin(ScrollTrigger);
-
-const pinTl = gsap.timeline({
-  scrollTrigger: {
-    trigger: ".cards-section",
-    start: "10% top",
-    end: "200% top",
-    scrub: 1.5,
-    pin: true,  // Pin the section
-  }
-});
-
-pinTl.from(".card", {
-  yPercent: 150,        // Start 150% below
-  stagger: 0.2,         // 0.2s delay between each card
-  ease: "power1.inOut"
-});
-</script>
-\`\`\`
-</GSAP ANIMATION PATTERNS>`;
+</ANIMATION OPTIONS>
+</ANIMATION SYSTEM>`;

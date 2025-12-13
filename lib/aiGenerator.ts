@@ -5,6 +5,17 @@ import { generateWithOpenAI } from "./aiModels/openai";
 import { generateWithGemini } from "./aiModels/gemini";
 
 /**
+ * 프롬프트 강화 - 사용자 프롬프트를 더 상세하게 확장
+ */
+function enhancePrompt(userPrompt: string): string {
+  const enhancement = `Create a BEAUTIFUL and INTERACTIVE landing page with rich GSAP animations. Always improve your design to the highest level.
+
+  + ${userPrompt}`;
+
+  return enhancement;
+}
+
+/**
  * 선택한 AI 모델로 랜딩 페이지를 생성합니다 (스트리밍 방식)
  *
  * @param prompt - 사용자 프롬프트
@@ -17,14 +28,16 @@ export async function* generateLandingPageStream(
   model: AIModel = "gemini",
   attachments?: FileAttachment[]
 ): AsyncGenerator<string, GenerationResult, unknown> {
+  const enhancedPrompt = enhancePrompt(prompt);
+
   const generator = (() => {
     switch (model) {
       case "claude":
-        return generateWithClaude(prompt, attachments);
+        return generateWithClaude(enhancedPrompt, attachments);
       case "chatgpt":
-        return generateWithOpenAI(prompt, attachments);
+        return generateWithOpenAI(enhancedPrompt, attachments);
       case "gemini":
-        return generateWithGemini(prompt, attachments);
+        return generateWithGemini(enhancedPrompt, attachments);
       default:
         throw new Error(`Unsupported AI model: ${model}`);
     }

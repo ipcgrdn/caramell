@@ -26,7 +26,7 @@ export async function* generateWithGemini(
     const model = genAI.getGenerativeModel({
       model: "gemini-3-pro-preview",
       generationConfig: {
-        temperature: 0.5,
+        temperature: 0.7,
         maxOutputTokens: 16000,
         responseMimeType: "application/json",
       },
@@ -50,10 +50,16 @@ export async function* generateWithGemini(
     });
 
     // 메시지 구성 (파일 첨부가 있는 경우 배열 형식)
-    let messageParts: string | Array<{ text: string } | { inlineData: { mimeType: string; data: string } }>;
+    let messageParts:
+      | string
+      | Array<
+          { text: string } | { inlineData: { mimeType: string; data: string } }
+        >;
 
     if (attachments && attachments.length > 0) {
-      const parts: Array<{ text: string } | { inlineData: { mimeType: string; data: string } }> = [];
+      const parts: Array<
+        { text: string } | { inlineData: { mimeType: string; data: string } }
+      > = [];
 
       // 텍스트 메시지를 먼저 추가
       parts.push({
@@ -164,7 +170,9 @@ ${JSON.stringify(currentFiles, null, 2)}`;
     // 채팅 히스토리 구성
     const history: Array<{
       role: "user" | "model";
-      parts: Array<{ text: string } | { inlineData: { mimeType: string; data: string } }>;
+      parts: Array<
+        { text: string } | { inlineData: { mimeType: string; data: string } }
+      >;
     }> = [
       {
         role: "user",
@@ -228,19 +236,19 @@ Remember: Return ONLY valid JSON. No markdown blocks.`,
     try {
       const parsedResult = JSON.parse(cleanedResponse);
 
-      if (!parsedResult || typeof parsedResult !== 'object') {
+      if (!parsedResult || typeof parsedResult !== "object") {
         throw new Error("Response is not an object");
       }
 
       const responseText = parsedResult.response || parsedResult.message;
-      if (!responseText || typeof responseText !== 'string') {
+      if (!responseText || typeof responseText !== "string") {
         console.error("Invalid response structure:", parsedResult);
         throw new Error("Missing or invalid 'response' or 'message' field");
       }
 
       return {
         response: responseText,
-        fileChanges: parsedResult.fileChanges
+        fileChanges: parsedResult.fileChanges,
       } as ChatResponse;
     } catch (parseError) {
       console.error("JSON Parse error:", parseError);
